@@ -1,5 +1,5 @@
 import 'babel-polyfill';
-import { zip, isEmpty, isNil, propOr } from 'ramda';
+import { isEmpty, isNil, propOr, toPairs } from 'ramda';
 
 const queryBuilder = (query = {}) => ({
   toQueryString: toQueryString(query)
@@ -29,7 +29,7 @@ const headersFormToString = query => {
   const headerKey = header => header[0];
   const headerValue = header => header[1];
 
-  const headerForm = zip(Object.keys(headers), Object.values(headers))
+  const headerForm = toPairs(headers)
     .map(header => `${headerKey(header)} = "${headerValue(header)}"`)
     .join(',');
 
@@ -56,7 +56,7 @@ const filtersFormToString = query => {
   const filterKey = filter => filter[0];
   const filterValue = filter => filter[1];
 
-  const filtersForm = zip(Object.keys(filters), Object.values(filters))
+  const filtersForm = toPairs(filters)
     .map(filter => `${filterKey(filter)} = "${filterValue(filter)}"`)
     .join(',');
 

@@ -131,5 +131,22 @@ describe('RestQL query builder', () => {
 
       expect(restQlQuery).toBe('from heroes as hero\nwith name = "Link"\nignore-errors');
     });
+
+    it('should get the query with modifier defined', () => {
+      const query = {
+        modifiers: {
+          'cache-control': 600
+        },
+        from: 'heroes',
+        as: 'hero',
+        with: {
+          name: 'Link'
+        }
+      };
+
+      const restQlquery = queryBuilder(query).toQueryString();
+
+      expect(restQlquery).toBe('use cache-control = 600\nfrom heroes as hero\nwith name = "Link"');
+    });
   });
 });

@@ -6,11 +6,28 @@ const queryBuilder = (query = {}) => ({
 });
 
 const toQueryString = query => () => {
-  return `${endpointFormToString(query)}${headersFormToString(query)}${timeoutFormToString(
+  return `${modifierFormToString(query)}${endpointFormToString(query)}${headersFormToString(
     query
-  )}${filtersFormToString(query)}${onlyFormToString(query)}${hiddenFormToString(
+  )}${timeoutFormToString(query)}${filtersFormToString(query)}${onlyFormToString(
     query
-  )}${ignoreErrorsFormToString(query)}`;
+  )}${hiddenFormToString(query)}${ignoreErrorsFormToString(query)}`;
+};
+
+const modifierFormToString = query => {
+  const modifiers = propOr({}, 'modifiers', query);
+
+  if (isEmpty(modifiers)) {
+    return '';
+  }
+
+  const modifierKey = modifier => modifier[0];
+  const modifierValue = modifier => modifier[1];
+
+  const modifiersForm = toPairs(modifiers)
+    .map(modifier => `${modifierKey(modifier)} = ${modifierValue(modifier)}`)
+    .join(', ');
+
+  return `use ${modifiersForm}\n`;
 };
 
 const endpointFormToString = query => {

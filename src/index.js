@@ -8,7 +8,9 @@ const queryBuilder = (query = {}) => ({
 const toQueryString = query => () => {
   return `${endpointFormToString(query)}${headersFormToString(query)}${timeoutFormToString(
     query
-  )}${filtersFormToString(query)}`;
+  )}${filtersFormToString(query)}${onlyFormToString(query)}${hiddenFormToString(
+    query
+  )}${ignoreErrorsFormToString(query)}`;
 };
 
 const endpointFormToString = query => {
@@ -61,6 +63,38 @@ const filtersFormToString = query => {
     .join(',');
 
   return `\nwith ${filtersForm}`;
+};
+
+const onlyFormToString = query => {
+  const fields = propOr([], 'only', query);
+
+  if (isEmpty(fields)) {
+    return '';
+  }
+
+  const onlyForm = fields.join(', ');
+
+  return `\nonly ${onlyForm}`;
+};
+
+const hiddenFormToString = query => {
+  const isHidden = propOr(false, 'hidden', query);
+
+  if (isHidden) {
+    return `\nhidden`;
+  } else {
+    return '';
+  }
+};
+
+const ignoreErrorsFormToString = query => {
+  const hasIgnoreErros = propOr(false, 'ignoreErrors', query);
+
+  if (hasIgnoreErros) {
+    return '\nignore-errors';
+  } else {
+    return '';
+  }
 };
 
 export default queryBuilder;

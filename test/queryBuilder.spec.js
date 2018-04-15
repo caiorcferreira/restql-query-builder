@@ -67,7 +67,7 @@ describe('RestQL query builder', () => {
       );
     });
 
-    it('should get query with timeout deifned by the given value', () => {
+    it('should get query with timeout defined by the given value', () => {
       const query = {
         from: 'heroes',
         as: 'hero',
@@ -85,6 +85,51 @@ describe('RestQL query builder', () => {
       expect(restQlQuery).toBe(
         'from heroes as hero\nheaders Accept = "application/json"\ntimeout = 200\nwith name = "Link"'
       );
+    });
+
+    it('should get the query with returning fields defined by the only form', () => {
+      const query = {
+        from: 'heroes',
+        as: 'hero',
+        with: {
+          name: 'Link'
+        },
+        only: ['name', 'clothe']
+      };
+
+      const restQlQuery = queryBuilder(query).toQueryString();
+
+      expect(restQlQuery).toEqual('from heroes as hero\nwith name = "Link"\nonly name, clothe');
+    });
+
+    it('should get the query with hidden defined', () => {
+      const query = {
+        from: 'heroes',
+        as: 'hero',
+        with: {
+          name: 'Link'
+        },
+        hidden: true
+      };
+
+      const restQlQuery = queryBuilder(query).toQueryString();
+
+      expect(restQlQuery).toBe('from heroes as hero\nwith name = "Link"\nhidden');
+    });
+
+    it('should get the query defined to ignore errors', () => {
+      const query = {
+        from: 'heroes',
+        as: 'hero',
+        with: {
+          name: 'Link'
+        },
+        ignoreErrors: true
+      };
+
+      const restQlQuery = queryBuilder(query).toQueryString();
+
+      expect(restQlQuery).toBe('from heroes as hero\nwith name = "Link"\nignore-errors');
     });
   });
 });

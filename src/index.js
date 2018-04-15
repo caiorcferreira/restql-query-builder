@@ -1,17 +1,22 @@
 import 'babel-polyfill';
-import { isEmpty, isNil, propOr, toPairs, type } from 'ramda';
+import { isEmpty, isNil, propOr, toPairs, is, type } from 'ramda';
 
 const queryBuilder = (query = {}) => ({
   toQueryString: toQueryString(query)
 });
 
 const toQueryString = query => () => {
-  return `${modifierFormToString(query)}${endpointFormToString(query)}${headersFormToString(
-    query
-  )}${timeoutFormToString(query)}${filtersFormToString(query)}${onlyFormToString(
-    query
-  )}${hiddenFormToString(query)}${ignoreErrorsFormToString(query)}`;
+  const queryList = is(Array, query) ? query : [query];
+
+  return queryList.map(endpointQueryString).join('\n\n');
 };
+
+const endpointQueryString = endpointQuery =>
+  `${modifierFormToString(endpointQuery)}${fromFormToString(endpointQuery)}${headersFormToString(
+    endpointQuery
+  )}${timeoutFormToString(endpointQuery)}${filtersFormToString(endpointQuery)}${onlyFormToString(
+    endpointQuery
+  )}${hiddenFormToString(endpointQuery)}${ignoreErrorsFormToString(endpointQuery)}`;
 
 const modifierFormToString = query => {
   const modifiers = propOr({}, 'modifiers', query);
@@ -27,7 +32,7 @@ const modifierFormToString = query => {
   return `use ${modifiersForm}\n`;
 };
 
-const endpointFormToString = query => {
+const fromFormToString = query => {
   const endpoint = query.from;
   const alias = query.as;
 
@@ -107,20 +112,26 @@ const ignoreErrorsFormToString = query => {
 
 const formatParameter = ([key, value]) => `${key} = ${formatParameterValueByType(value)}`;
 
-const formatParameterValueByType = parameter => {
-  const parameterType = type(parameter);
-  const stringify = obj =>
-    toPairs(obj).reduce((acc, [key, value]) => `${key}: ${formatParameterValueByType(value)}`, '');
+const formatParameterValueByType = value => {
+  const valueType = type(value);
 
-  switch (parameterType) {
+  const isReferenceType = value => value.match(/(\w+)\.(\w+)/);
+
+  const stringify = obj =>
+    toPairs(obj).reduce(
+      (acc, [objKey, objValue]) => `${objKey}: ${formatParameterValueByType(objValue)}`,
+      ''
+    );
+
+  switch (valueType) {
     case 'String':
-      return `"${parameter}"`;
+      return isReferenceType(value) ? `${value}` : `"${value}"`;
     case 'Object':
-      return `{${stringify(parameter)}}`;
+      return `{${stringify(value)}}`;
     case 'Array':
-      return JSON.stringify(parameter);
+      return JSON.stringify(value);
     default:
-      return `${parameter}`;
+      return `${value}`;
   }
 };
 

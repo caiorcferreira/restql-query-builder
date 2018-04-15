@@ -171,5 +171,55 @@ describe('RestQL query builder', () => {
         'from heroes as hero\nheaders Accept = "application/json"\nwith name = "Link", age = 10, using = ["sword","shield"], stats = {health: 100}, honored = true'
       );
     });
+
+    it('should get the query for multiple endpoints', () => {
+      const query = [
+        {
+          from: 'heroes',
+          as: 'hero',
+          with: {
+            name: 'Link'
+          },
+          hidden: true
+        },
+        {
+          from: 'weapons',
+          as: 'weapon',
+          only: ['name']
+        }
+      ];
+
+      const restQlQuery = queryBuilder(query).toQueryString();
+
+      expect(restQlQuery).toBe(
+        'from heroes as hero\nwith name = "Link"\nhidden\n\nfrom weapons as weapon\nonly name'
+      );
+    });
+
+    it('should get the query for multiple chaning endpoints', () => {
+      const query = [
+        {
+          from: 'heroes',
+          as: 'hero',
+          with: {
+            name: 'Link'
+          },
+          hidden: true
+        },
+        {
+          from: 'weapons',
+          as: 'weapon',
+          with: {
+            hero: 'hero.id'
+          }
+        }
+      ];
+
+      const restQlQuery = queryBuilder(query).toQueryString();
+
+      expect(restQlQuery).toBe(
+        'from heroes as hero\nwith name = "Link"\nhidden\n\nfrom weapons as weapon\nwith hero = hero.id'
+      );
+    });
   });
 });

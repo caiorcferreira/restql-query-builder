@@ -1,5 +1,5 @@
 import 'babel-polyfill';
-import { isEmpty, isNil, propOr, toPairs } from 'ramda';
+import { isEmpty, isNil, propOr, toPairs, type } from 'ramda';
 
 const queryBuilder = (query = {}) => ({
   toQueryString: toQueryString(query)
@@ -20,11 +20,8 @@ const modifierFormToString = query => {
     return '';
   }
 
-  const modifierKey = modifier => modifier[0];
-  const modifierValue = modifier => modifier[1];
-
   const modifiersForm = toPairs(modifiers)
-    .map(modifier => `${modifierKey(modifier)} = ${modifierValue(modifier)}`)
+    .map(formatParameter)
     .join(', ');
 
   return `use ${modifiersForm}\n`;
@@ -45,12 +42,9 @@ const headersFormToString = query => {
     return '';
   }
 
-  const headerKey = header => header[0];
-  const headerValue = header => header[1];
-
   const headerForm = toPairs(headers)
-    .map(header => `${headerKey(header)} = "${headerValue(header)}"`)
-    .join(',');
+    .map(formatParameter)
+    .join(', ');
 
   return `\nheaders ${headerForm}`;
 };
@@ -72,12 +66,9 @@ const filtersFormToString = query => {
     return '';
   }
 
-  const filterKey = filter => filter[0];
-  const filterValue = filter => filter[1];
-
   const filtersForm = toPairs(filters)
-    .map(filter => `${filterKey(filter)} = "${filterValue(filter)}"`)
-    .join(',');
+    .map(formatParameter)
+    .join(', ');
 
   return `\nwith ${filtersForm}`;
 };
@@ -111,6 +102,25 @@ const ignoreErrorsFormToString = query => {
     return '\nignore-errors';
   } else {
     return '';
+  }
+};
+
+const formatParameter = ([key, value]) => `${key} = ${formatParameterValueByType(value)}`;
+
+const formatParameterValueByType = parameter => {
+  const parameterType = type(parameter);
+  const stringify = obj =>
+    toPairs(obj).reduce((acc, [key, value]) => `${key}: ${formatParameterValueByType(value)}`, '');
+
+  switch (parameterType) {
+    case 'String':
+      return `"${parameter}"`;
+    case 'Object':
+      return `{${stringify(parameter)}}`;
+    case 'Array':
+      return JSON.stringify(parameter);
+    default:
+      return `${parameter}`;
   }
 };
 

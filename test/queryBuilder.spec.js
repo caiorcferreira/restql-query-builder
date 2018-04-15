@@ -35,7 +35,7 @@ describe('RestQL query builder', () => {
 
       const restQlquery = queryBuilder(query).toQueryString();
 
-      expect(restQlquery).toBe('from heroes as hero\nwith name = "Link",color = "green"');
+      expect(restQlquery).toBe('from heroes as hero\nwith name = "Link", color = "green"');
     });
 
     it('should not define filters when with is empty', () => {
@@ -63,7 +63,7 @@ describe('RestQL query builder', () => {
       const restQlQuery = queryBuilder(query).toQueryString();
 
       expect(restQlQuery).toBe(
-        'from heroes as hero\nheaders Authorization = "Basic user:pass",Accept = "application/json"'
+        'from heroes as hero\nheaders Authorization = "Basic user:pass", Accept = "application/json"'
       );
     });
 
@@ -147,6 +147,29 @@ describe('RestQL query builder', () => {
       const restQlquery = queryBuilder(query).toQueryString();
 
       expect(restQlquery).toBe('use cache-control = 600\nfrom heroes as hero\nwith name = "Link"');
+    });
+
+    it('should get the query with values porperly set for each type', () => {
+      const query = {
+        from: 'heroes',
+        as: 'hero',
+        headers: {
+          Accept: 'application/json'
+        },
+        with: {
+          name: 'Link',
+          age: 10,
+          using: ['sword', 'shield'],
+          stats: { health: 100 },
+          honored: true
+        }
+      };
+
+      const restQlquery = queryBuilder(query).toQueryString();
+
+      expect(restQlquery).toBe(
+        'from heroes as hero\nheaders Accept = "application/json"\nwith name = "Link", age = 10, using = ["sword","shield"], stats = {health: 100}, honored = true'
+      );
     });
   });
 });

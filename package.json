@@ -1,0 +1,42 @@
+{
+  "name": "restql-query-builder",
+  "version": "0.0.1",
+  "description": "A builder for ad-hoc RestQL query requests.",
+  "main": "./dist/index.js",
+  "scripts": {
+    "start": "npm run dev",
+    "dev": "npm test",
+    "init": "mkdir dist",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean && npm run init",
+    "build": "babel ./src -d ./dist --ignore test.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "babel-polyfill": "^6.26.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-eslint": "^8.2.3",
+    "babel-plugin-transform-inline-environment-variables": "^0.4.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-env": "^1.6.1",
+    "eslint": "^4.19.1",
+    "eslint-plugin-import": "^2.11.0",
+    "eslint-plugin-jest": "^21.15.0",
+    "jest": "^22.4.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/caiorcferreira/restql-query-builder.git"
+  },
+  "keywords": ["restql", "query", "ad-hoc", "javascript"],
+  "files": ["dist"],
+  "author": "Caio Ferreira <caiorcferreira@gmail.com> (https://github.com/caiorcferreira)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/caiorcferreira/restql-query-builder/issues"
+  },
+  "homepage": "https://github.com/caiorcferreira/restql-query-builder#readme"
+}

@@ -66,5 +66,25 @@ describe('RestQL query builder', () => {
         'from heroes as hero\nheaders Authorization = "Basic user:pass",Accept = "application/json"'
       );
     });
+
+    it('should get query with timeout deifned by the given value', () => {
+      const query = {
+        from: 'heroes',
+        as: 'hero',
+        headers: {
+          Accept: 'application/json'
+        },
+        timeout: 200,
+        with: {
+          name: 'Link'
+        }
+      };
+
+      const restQlQuery = queryBuilder(query).toQueryString();
+
+      expect(restQlQuery).toBe(
+        'from heroes as hero\nheaders Accept = "application/json"\ntimeout = 200\nwith name = "Link"'
+      );
+    });
   });
 });

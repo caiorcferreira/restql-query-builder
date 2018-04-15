@@ -1,12 +1,14 @@
 import 'babel-polyfill';
-import { zip, isEmpty, propOr } from 'ramda';
+import { zip, isEmpty, isNil, propOr } from 'ramda';
 
 const queryBuilder = (query = {}) => ({
   toQueryString: toQueryString(query)
 });
 
 const toQueryString = query => () => {
-  return `${endpointFormToString(query)}${headersFormToString(query)}${filtersFormToString(query)}`;
+  return `${endpointFormToString(query)}${headersFormToString(query)}${timeoutFormToString(
+    query
+  )}${filtersFormToString(query)}`;
 };
 
 const endpointFormToString = query => {
@@ -32,6 +34,16 @@ const headersFormToString = query => {
     .join(',');
 
   return `\nheaders ${headerForm}`;
+};
+
+const timeoutFormToString = query => {
+  const timeout = propOr(null, 'timeout', query);
+
+  if (isNil(timeout)) {
+    return '';
+  }
+
+  return `\ntimeout = ${timeout}`;
 };
 
 const filtersFormToString = query => {

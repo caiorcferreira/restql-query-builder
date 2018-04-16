@@ -220,4 +220,23 @@ describe('transform a query object into a string', () => {
       'from heroes as hero\nwith name = "Link"\nhidden\n\nfrom weapons as weapon\nwith hero = hero.id'
     );
   });
+
+  it('should get query with functions applied to the given filters', () => {
+    const query = {
+      from: 'heroes',
+      as: 'hero',
+      with: {
+        using: ['sword', 'shield']
+      },
+      apply: {
+        with: {
+          using: 'flatten'
+        }
+      }
+    };
+
+    const restQlQuery = stringify(query);
+
+    expect(restQlQuery).toBe('from heroes as hero\nwith using = ["sword", "shield"] -> flatten');
+  });
 });

@@ -1,133 +1,131 @@
-import { isEmpty, isNil, propOr, toPairs, is, type } from 'ramda';
-
-const stringify = query => {
-  const queryList = is(Array, query) ? query : [query];
-
-  return queryList.map(stringifyQuery).join('\n\n');
-};
-
-const stringifyQuery = query =>
-  `${modifierFormToString(query)}${fromFormToString(query)}${headersFormToString(
-    query
-  )}${timeoutFormToString(query)}${filtersFormToString(query)}${onlyFormToString(
-    query
-  )}${hiddenFormToString(query)}${ignoreErrorsFormToString(query)}`;
-
-const modifierFormToString = query => {
-  const modifiers = propOr({}, 'modifiers', query);
-
-  if (isEmpty(modifiers)) {
-    return '';
-  }
-
-  const modifiersForm = toPairs(modifiers)
-    .map(formatParameter)
-    .join(', ');
-
-  return `use ${modifiersForm}\n`;
-};
-
-const fromFormToString = query => {
-  const endpoint = query.from;
-  const alias = query.as;
-
-  const boundingForm = alias ? ` as ${alias}` : '';
-  return `from ${endpoint}${boundingForm}`;
-};
-
-const headersFormToString = query => {
-  const headers = propOr({}, 'headers', query);
-
-  if (isEmpty(headers)) {
-    return '';
-  }
-
-  const headerForm = toPairs(headers)
-    .map(formatParameter)
-    .join(', ');
-
-  return `\nheaders ${headerForm}`;
-};
-
-const timeoutFormToString = query => {
-  const timeout = propOr(null, 'timeout', query);
-
-  if (isNil(timeout)) {
-    return '';
-  }
-
-  return `\ntimeout = ${timeout}`;
-};
-
-const filtersFormToString = query => {
-  const filters = propOr({}, 'with', query);
-
-  if (isEmpty(filters)) {
-    return '';
-  }
-
-  const filtersForm = toPairs(filters)
-    .map(formatParameter)
-    .join(', ');
-
-  return `\nwith ${filtersForm}`;
-};
-
-const onlyFormToString = query => {
-  const fields = propOr([], 'only', query);
-
-  if (isEmpty(fields)) {
-    return '';
-  }
-
-  const onlyForm = fields.join(', ');
-
-  return `\nonly ${onlyForm}`;
-};
-
-const hiddenFormToString = query => {
-  const isHidden = propOr(false, 'hidden', query);
-
-  if (isHidden) {
-    return `\nhidden`;
-  } else {
-    return '';
-  }
-};
-
-const ignoreErrorsFormToString = query => {
-  const hasIgnoreErros = propOr(false, 'ignoreErrors', query);
-
-  if (hasIgnoreErros) {
-    return '\nignore-errors';
-  } else {
-    return '';
-  }
-};
-
-const formatParameter = ([key, value]) => `${key} = ${formatParameterValueByType(value)}`;
-
-const formatParameterValueByType = value => {
-  const valueType = type(value);
-
-  switch (valueType) {
-    case 'String':
-      return isReferenceType(value) ? `${value}` : `"${value}"`;
-    case 'Object':
-      return `{${stringifyObj(value)}}`;
-    case 'Array':
-      return JSON.stringify(value);
-    default:
-      return `${value}`;
-  }
-};
+import { 
+  compose, map, isEmpty, 
+  isNil, propOr, toPairs,
+  is, reduce, converge,
+  join, not, always,
+  identity, cond, defaultTo,
+  props, zip, equals,
+  call, head, last
+} from 'ramda';
 
 const isReferenceType = value => value.match(/(\w+)\.(\w+)/);
 
-const stringifyObj = obj =>
-  toPairs(obj).reduce(
-    (acc, [objKey, objValue]) => `${objKey}: ${formatParameterValueByType(objValue)}`,
-    ''
-  );
+const stringifyObj = compose(
+  objectAsString => `{${objectAsString}}`,
+  reduce((acc, [objKey, objValue]) => `${objKey}: ${formatParameterValueByType(objValue)}`, ''),
+  toPairs
+)
+
+const formatParameterValueByType = cond([
+    [compose(is(String)), value => isReferenceType(value) ? `${value}` : `"${value}"`],
+    [compose(is(Array)), JSON.stringify],
+    [compose(is(Object)), stringifyObj],
+    [always(true), value => `${value}`]
+]);
+
+const formatParameter = ([key, value]) => `${key} = ${formatParameterValueByType(value)}`;
+
+// ignoreErrorsFormToString :: Query => String
+const ignoreErrorsFormToString = compose(
+  cond([
+    [equals(false), always('')],
+    [always(true), () => `\nignore-errors`]
+  ]),
+  propOr(false, 'ignoreErrors')
+);
+
+// hiddenFormToString :: Query => String
+const hiddenFormToString = compose(
+  cond([
+    [equals(false), always('')],
+    [always(true), () => `\nhidden`]
+  ]),
+  propOr(false, 'hidden')
+);
+
+// onlyFormToString :: Query => String
+const onlyFormToString = compose(
+  cond([
+    [isEmpty, always('')],
+    [always(true), onlyForm => `\nonly ${onlyForm}`]
+  ]),
+  join(', '),
+  propOr([], 'only')
+);
+
+// withFormToString :: Query => String
+const withFormToString = compose(
+  cond([
+    [isEmpty, always('')],
+    [always(true), withForm => `\nwith ${withForm}`]
+  ]),
+  join(', '),
+  map(formatParameter),
+  toPairs,
+  propOr({}, 'with')
+);
+
+// timeoutFormToString :: Query => String
+const timeoutFormToString = compose(
+  cond([
+    [isNil, always('')],
+    [always(true), timeout => `\ntimeout = ${timeout}`]
+  ]),
+  propOr(null, 'timeout')
+);
+
+// headersFormToString :: Query => String
+const headersFormToString = compose(
+  cond([
+    [isEmpty, always('')],
+    [always(true), headersForm => `\nheaders ${headersForm}`]
+  ]),
+  join(', '),
+  map(formatParameter),
+  toPairs,
+  propOr({}, 'headers')
+);
+
+// fromFormToString :: Query => String
+const fromFormToString = compose(
+  join(''),
+  compose(
+    map(converge(call, [head, last])),
+    zip([
+      endpoint => endpoint ? `from ${endpoint}` : '',
+      alias => alias ? ` as ${alias}` : ''
+    ])
+  ),
+  props(['from', 'as'])
+);
+
+// modifierFormToString :: Query => String
+const modifierFormToString = compose(
+  cond([
+    [isEmpty, always('')],
+    [always(true), modifiersForm => `use ${modifiersForm}\n`]
+  ]),
+  join(', '),
+  map(formatParameter),
+  toPairs,
+  propOr({}, 'modifiers')
+);
+
+// stringifyQuery :: Query => String
+const stringifyQuery = converge(compose(join(''), Array.of),
+  [modifierFormToString, fromFormToString, headersFormToString, timeoutFormToString, withFormToString, 
+    onlyFormToString, hiddenFormToString, ignoreErrorsFormToString]
+);
+
+// stringify :: Query => String
+const stringify = compose(
+  join('\n\n'),
+  map(stringifyQuery),
+  cond([
+    [compose(not, is(Array)), Array.of],
+    [always(true), identity]
+  ]),
+  defaultTo([])
+);
 
 export default stringify;

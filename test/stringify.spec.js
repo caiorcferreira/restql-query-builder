@@ -1,6 +1,14 @@
 import stringify from '../src/stringify';
 
 describe('transform a query object into a string', () => {
+  it('should get an empty query if there is no information', () => {
+    const empty_query = {};
+
+    const restQlQuery = stringify(empty_query);
+
+    expect(restQlQuery).toBe('');
+  });
+
   it('should get a query for a given endpoint', () => {
     const query = {
       from: 'heroes'

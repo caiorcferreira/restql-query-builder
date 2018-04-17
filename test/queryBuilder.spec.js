@@ -1,6 +1,12 @@
 import queryBuilder from '../src';
 
 describe('RestQL query builder', () => {
+  it('should get an empty string when no query is provided', () => {
+    const restQlQuery = queryBuilder().toQueryString();
+
+    expect(restQlQuery).toBe('');
+  });
+
   it('should get the string form of a query', () => {
     const query = {
       from: 'heroes',

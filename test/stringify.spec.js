@@ -245,6 +245,6 @@ describe('transform a query object into a string', () => {
 
     const restQlQuery = stringify(query);
 
-    expect(restQlQuery).toBe('from heroes as hero\nwith using = ["sword", "shield"] -> flatten');
+    expect(restQlQuery).toBe('from heroes as hero\nwith using = ["sword","shield"] -> flatten');
   });
 });

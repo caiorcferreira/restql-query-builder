@@ -20,7 +20,8 @@ import {
   head,
   last,
   pathOr,
-  curry
+  curry,
+  tap
 } from 'ramda';
 
 const returnValue = always;
@@ -67,6 +68,14 @@ const hiddenFormToString = compose(
   propOr(false, 'hidden')
 );
 
+// applyFunctionFormater :: Map<String, String> => Parameter<String[]> => String
+const applyFunctionFormater = curry((applyMap, parameterKey) => {
+  return compose(
+    cond([[isEmpty, identity], [always(true), applyString => ` -> ${applyString}`]]),
+    propOr('', parameterKey)
+  )(applyMap);
+});
+
 // onlyFormToString :: Query => String
 const onlyFormToString = compose(
   cond([[isEmpty, returnValue('')], [always(true), onlyForm => `\nonly ${onlyForm}`]]),
@@ -74,19 +83,15 @@ const onlyFormToString = compose(
   propOr([], 'only')
 );
 
-// applyFunctionFormater :: Map<String, String> => Parameter<String[]> => String
-const applyFunctionFormater = curry((applyMap, parameter) => {
-  const parameterKey = head;
-
-  return compose(
-    cond([[isEmpty, identity], [always(true), applyString => ` -> ${applyString}`]]),
-    propOr('', parameterKey(parameter))
-  )(applyMap);
-});
+// parameterKey :: Parameter<String[]> => String
+const parameterKey = head;
 
 // formatWithClauses :: Map<String, String> => Parameter<String[]> => String[]
 const formatWithClauses = applyMap =>
-  converge(compose(join(''), Array.of), [formatKeyValuePair, applyFunctionFormater(applyMap)]);
+  converge(compose(join(''), Array.of), [
+    formatKeyValuePair,
+    compose(applyFunctionFormater(applyMap), parameterKey)
+  ]);
 
 // withFormToString :: Query => String
 const withFormToString = query => {

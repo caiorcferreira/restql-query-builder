@@ -251,4 +251,21 @@ describe('transform a query object into a string', () => {
       'from heroes as hero\nwith using = ["sword","shield"] -> flatten, bag = {capacity: 10} -> base64'
     );
   });
+
+  it.only('should get the query with filters applied to it', () => {
+    const query = {
+      from: 'heroes',
+      as: 'hero',
+      only: ['name'],
+      apply: {
+        only: {
+          name: 'matches("^Super")'
+        }
+      }
+    };
+
+    const restQlQuery = stringify(query);
+
+    expect(restQlQuery).toBe('from heroes as hero\nonly name -> matches("^Super")');
+  });
 });

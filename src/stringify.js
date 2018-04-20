@@ -23,7 +23,6 @@ import {
   curry
 } from 'ramda';
 
-
 const returnValue = always;
 
 const isReferenceType = cond([
@@ -31,24 +30,28 @@ const isReferenceType = cond([
   [always(true), returnValue(false)]
 ]);
 
-const formatObject = compose(
-  objectAsString => `{${objectAsString}}`,
-  join(','),
-  map(([objKey, objValue]) => `${objKey}: ${formatValueByType(objValue)}`),
-  toPairs
-);
+const formatObject = curry((valueFormater, object) => {
+  return compose(
+    objectAsString => `{${objectAsString}}`,
+    join(','),
+    map(([key, value]) => `${key}: ${valueFormater(value)}`),
+    toPairs
+  )(object);
+});
 const formatArray = JSON.stringify;
 const formatString = value => `"${value}"`;
 const formatDefaultValue = value => `${value}`;
 const formatReferenceType = formatDefaultValue;
 
-const formatValueByType = cond([
-  [isReferenceType, formatReferenceType],
-  [is(String), formatString],
-  [is(Array), formatArray],
-  [is(Object), formatObject],
-  [always(true), formatDefaultValue]
-]);
+function formatValueByType(value) {
+  return cond([
+    [isReferenceType, formatReferenceType],
+    [is(String), formatString],
+    [is(Array), formatArray],
+    [is(Object), formatObject(formatValueByType)],
+    [always(true), formatDefaultValue]
+  ])(value);
+}
 
 const formatKeyValuePair = ([key, value]) => `${key} = ${formatValueByType(value)}`;
 
@@ -76,10 +79,7 @@ const applyFunctionFormater = curry((applyMap, parameter) => {
   const parameterKey = head;
 
   return compose(
-    cond([
-      [isEmpty, identity],
-      [always(true), applyString => ` -> ${applyString}`]
-    ]),
+    cond([[isEmpty, identity], [always(true), applyString => ` -> ${applyString}`]]),
     propOr('', parameterKey(parameter))
   )(applyMap);
 });

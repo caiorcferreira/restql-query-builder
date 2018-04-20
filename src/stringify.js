@@ -6,7 +6,6 @@ import {
   propOr,
   toPairs,
   is,
-  reduce,
   converge,
   join,
   not,
@@ -34,7 +33,8 @@ const isReferenceType = cond([
 
 const formatObject = compose(
   objectAsString => `{${objectAsString}}`,
-  reduce((acc, [objKey, objValue]) => `${objKey}: ${formatValueByType(objValue)}`, ''),
+  join(','),
+  map(([objKey, objValue]) => `${objKey}: ${formatValueByType(objValue)}`),
   toPairs
 );
 const formatArray = JSON.stringify;

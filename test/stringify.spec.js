@@ -156,7 +156,7 @@ describe('transform a query object into a string', () => {
     expect(restQlquery).toBe('use cache-control = 600\nfrom heroes as hero\nwith name = "Link"');
   });
 
-  it('should get the query with values porperly set for each type', () => {
+  it('should get the query with values properly set for each type', () => {
     const query = {
       from: 'heroes',
       as: 'hero',
@@ -167,7 +167,7 @@ describe('transform a query object into a string', () => {
         name: 'Link',
         age: 10,
         using: ['sword', 'shield'],
-        stats: { health: 100 },
+        stats: { health: 100, mana: 90 },
         honored: true
       }
     };
@@ -175,7 +175,7 @@ describe('transform a query object into a string', () => {
     const restQlquery = stringify(query);
 
     expect(restQlquery).toBe(
-      'from heroes as hero\nheaders Accept = "application/json"\nwith name = "Link", age = 10, using = ["sword","shield"], stats = {health: 100}, honored = true'
+      'from heroes as hero\nheaders Accept = "application/json"\nwith name = "Link", age = 10, using = ["sword","shield"], stats = {health: 100,mana: 90}, honored = true'
     );
   });
 

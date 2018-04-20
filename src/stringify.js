@@ -38,15 +38,16 @@ const formatObject = compose(
   toPairs
 );
 const formatArray = JSON.stringify;
-const formatString = value => (isReferenceType(value) ? `${value}` : `"${value}"`);
-const formatReferenceType = value => `${value}`;
+const formatString = value => `"${value}"`;
+const formatDefaultValue = value => `${value}`;
+const formatReferenceType = formatDefaultValue;
 
 const formatValueByType = cond([
   [isReferenceType, formatReferenceType],
-  [compose(is(String)), formatString],
-  [compose(is(Array)), formatArray],
-  [compose(is(Object)), formatObject],
-  [always(true), value => `${value}`]
+  [is(String), formatString],
+  [is(Array), formatArray],
+  [is(Object), formatObject],
+  [always(true), formatDefaultValue]
 ]);
 
 const formatKeyValuePair = ([key, value]) => `${key} = ${formatValueByType(value)}`;

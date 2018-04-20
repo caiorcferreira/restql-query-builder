@@ -45,7 +45,7 @@ describe('transform a query object into a string', () => {
     expect(restQlquery).toBe('from heroes as hero\nwith name = "Link", color = "green"');
   });
 
-  it('should not define filters when with is empty', () => {
+  it('should not define with clauses when with is empty', () => {
     const query = {
       from: 'heroes',
       as: 'hero',
@@ -94,7 +94,7 @@ describe('transform a query object into a string', () => {
     );
   });
 
-  it('should get the query with returning fields defined by the only form', () => {
+  it('should get the query with filters defined', () => {
     const query = {
       from: 'heroes',
       as: 'hero',
@@ -229,7 +229,7 @@ describe('transform a query object into a string', () => {
     );
   });
 
-  it('should get query with functions applied to the given filters', () => {
+  it('should get query with functions applied to the given with clauses', () => {
     const query = {
       from: 'heroes',
       as: 'hero',

@@ -21,64 +21,78 @@ import {
   head,
   last,
   pathOr,
-  curry,
-  tap
+  curry
 } from 'ramda';
 
-const isReferenceType = value => value.match(/(\w+)\.(\w+)/);
 
-const stringifyObj = compose(
+const returnValue = always;
+
+const isReferenceType = cond([
+  [is(String), value => value.match(/(\w+)\.(\w+)/)],
+  [always(true), returnValue(false)]
+]);
+
+const formatObject = compose(
   objectAsString => `{${objectAsString}}`,
-  reduce((acc, [objKey, objValue]) => `${objKey}: ${formatParameterValueByType(objValue)}`, ''),
+  reduce((acc, [objKey, objValue]) => `${objKey}: ${formatValueByType(objValue)}`, ''),
   toPairs
 );
+const formatArray = JSON.stringify;
+const formatString = value => (isReferenceType(value) ? `${value}` : `"${value}"`);
+const formatReferenceType = value => `${value}`;
 
-const formatParameterValueByType = cond([
-  [compose(is(String)), value => (isReferenceType(value) ? `${value}` : `"${value}"`)],
-  [compose(is(Array)), JSON.stringify],
-  [compose(is(Object)), stringifyObj],
+const formatValueByType = cond([
+  [isReferenceType, formatReferenceType],
+  [compose(is(String)), formatString],
+  [compose(is(Array)), formatArray],
+  [compose(is(Object)), formatObject],
   [always(true), value => `${value}`]
 ]);
 
-const formatParameter = ([key, value]) => `${key} = ${formatParameterValueByType(value)}`;
+const formatKeyValuePair = ([key, value]) => `${key} = ${formatValueByType(value)}`;
 
 // ignoreErrorsFormToString :: Query => String
 const ignoreErrorsFormToString = compose(
-  cond([[equals(false), always('')], [always(true), () => `\nignore-errors`]]),
+  cond([[equals(false), returnValue('')], [always(true), () => `\nignore-errors`]]),
   propOr(false, 'ignoreErrors')
 );
 
 // hiddenFormToString :: Query => String
 const hiddenFormToString = compose(
-  cond([[equals(false), always('')], [always(true), () => `\nhidden`]]),
+  cond([[equals(false), returnValue('')], [always(true), () => `\nhidden`]]),
   propOr(false, 'hidden')
 );
 
 // onlyFormToString :: Query => String
 const onlyFormToString = compose(
-  cond([[isEmpty, always('')], [always(true), onlyForm => `\nonly ${onlyForm}`]]),
+  cond([[isEmpty, returnValue('')], [always(true), onlyForm => `\nonly ${onlyForm}`]]),
   join(', '),
   propOr([], 'only')
 );
 
+// applyFunctionFormater :: Map<String, String> => Parameter<String[]> => String
 const applyFunctionFormater = curry((applyMap, parameter) => {
   const parameterKey = head;
 
   return compose(
-    cond([[compose(not, isEmpty), applyString => ` -> ${applyString}`], [always(true), identity]]),
+    cond([
+      [isEmpty, identity],
+      [always(true), applyString => ` -> ${applyString}`]
+    ]),
     propOr('', parameterKey(parameter))
   )(applyMap);
 });
 
+// formatWithClauses :: Map<String, String> => Parameter<String[]> => String[]
 const formatWithClauses = applyMap =>
-  converge(compose(join(''), Array.of), [formatParameter, applyFunctionFormater(applyMap)]);
+  converge(compose(join(''), Array.of), [formatKeyValuePair, applyFunctionFormater(applyMap)]);
 
 // withFormToString :: Query => String
 const withFormToString = query => {
   const applyMap = pathOr({}, ['apply', 'with'])(query);
 
   return compose(
-    cond([[isEmpty, always('')], [always(true), withForm => `\nwith ${withForm}`]]),
+    cond([[isEmpty, returnValue('')], [always(true), withForm => `\nwith ${withForm}`]]),
     join(', '),
     map(formatWithClauses(applyMap)),
     toPairs,
@@ -88,15 +102,15 @@ const withFormToString = query => {
 
 // timeoutFormToString :: Query => String
 const timeoutFormToString = compose(
-  cond([[isNil, always('')], [always(true), timeout => `\ntimeout = ${timeout}`]]),
+  cond([[isNil, returnValue('')], [always(true), timeout => `\ntimeout = ${timeout}`]]),
   propOr(null, 'timeout')
 );
 
 // headersFormToString :: Query => String
 const headersFormToString = compose(
-  cond([[isEmpty, always('')], [always(true), headersForm => `\nheaders ${headersForm}`]]),
+  cond([[isEmpty, returnValue('')], [always(true), headersForm => `\nheaders ${headersForm}`]]),
   join(', '),
-  map(formatParameter),
+  map(formatKeyValuePair),
   toPairs,
   propOr({}, 'headers')
 );
@@ -113,9 +127,9 @@ const fromFormToString = compose(
 
 // modifierFormToString :: Query => String
 const modifierFormToString = compose(
-  cond([[isEmpty, always('')], [always(true), modifiersForm => `use ${modifiersForm}\n`]]),
+  cond([[isEmpty, returnValue('')], [always(true), modifiersForm => `use ${modifiersForm}\n`]]),
   join(', '),
-  map(formatParameter),
+  map(formatKeyValuePair),
   toPairs,
   propOr({}, 'modifiers')
 );

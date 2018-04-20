@@ -94,7 +94,7 @@ describe('transform a query object into a string', () => {
     );
   });
 
-  it('should get the query with filters defined', () => {
+  it('should get the query with only filters defined', () => {
     const query = {
       from: 'heroes',
       as: 'hero',
@@ -229,22 +229,26 @@ describe('transform a query object into a string', () => {
     );
   });
 
-  it('should get query with functions applied to the given with clauses', () => {
+  it('should get the query with expansion and enconding functions applied to it', () => {
     const query = {
       from: 'heroes',
       as: 'hero',
       with: {
-        using: ['sword', 'shield']
+        using: ['sword', 'shield'],
+        bag: { capacity: 10 }
       },
       apply: {
         with: {
-          using: 'flatten'
+          using: 'flatten',
+          bag: 'base64'
         }
       }
     };
 
     const restQlQuery = stringify(query);
 
-    expect(restQlQuery).toBe('from heroes as hero\nwith using = ["sword","shield"] -> flatten');
+    expect(restQlQuery).toBe(
+      'from heroes as hero\nwith using = ["sword","shield"] -> flatten, bag = {capacity: 10} -> base64'
+    );
   });
 });

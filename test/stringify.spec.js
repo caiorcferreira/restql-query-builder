@@ -252,7 +252,7 @@ describe('transform a query object into a string', () => {
     );
   });
 
-  it.only('should get the query with filters applied to it', () => {
+  it('should get the query with filters applied to it', () => {
     const query = {
       from: 'heroes',
       as: 'hero',

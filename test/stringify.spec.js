@@ -57,7 +57,7 @@ describe('transform a query object into a string', () => {
     expect(restQlQuery).toBe('from heroes as hero');
   });
 
-  it('should get query with headers define', () => {
+  it('should get the query string with headers define', () => {
     const query = {
       from: 'heroes',
       as: 'hero',
@@ -74,7 +74,7 @@ describe('transform a query object into a string', () => {
     );
   });
 
-  it('should get query with timeout defined by the given value', () => {
+  it('should get the query string with timeout defined by the given value', () => {
     const query = {
       from: 'heroes',
       as: 'hero',
@@ -94,7 +94,7 @@ describe('transform a query object into a string', () => {
     );
   });
 
-  it('should get the query with only filters defined', () => {
+  it('should get the query string with only filters defined', () => {
     const query = {
       from: 'heroes',
       as: 'hero',
@@ -109,7 +109,7 @@ describe('transform a query object into a string', () => {
     expect(restQlQuery).toEqual('from heroes as hero\nwith name = "Link"\nonly name, clothe');
   });
 
-  it('should get the query with hidden defined', () => {
+  it('should get the query string with hidden defined', () => {
     const query = {
       from: 'heroes',
       as: 'hero',
@@ -124,7 +124,7 @@ describe('transform a query object into a string', () => {
     expect(restQlQuery).toBe('from heroes as hero\nwith name = "Link"\nhidden');
   });
 
-  it('should get the query defined to ignore errors', () => {
+  it('should get the query string defined to ignore errors', () => {
     const query = {
       from: 'heroes',
       as: 'hero',
@@ -139,7 +139,7 @@ describe('transform a query object into a string', () => {
     expect(restQlQuery).toBe('from heroes as hero\nwith name = "Link"\nignore-errors');
   });
 
-  it('should get the query with modifier defined', () => {
+  it('should get the query string with modifier defined', () => {
     const query = {
       modifiers: {
         'cache-control': 600
@@ -156,7 +156,7 @@ describe('transform a query object into a string', () => {
     expect(restQlquery).toBe('use cache-control = 600\nfrom heroes as hero\nwith name = "Link"');
   });
 
-  it('should get the query with values properly set for each type', () => {
+  it('should get the query string with values properly set for each type', () => {
     const query = {
       from: 'heroes',
       as: 'hero',
@@ -179,7 +179,7 @@ describe('transform a query object into a string', () => {
     );
   });
 
-  it('should get the query for multiple endpoints', () => {
+  it('should get the query string for multiple endpoints', () => {
     const query = [
       {
         from: 'heroes',
@@ -203,7 +203,7 @@ describe('transform a query object into a string', () => {
     );
   });
 
-  it('should get the query for multiple chaning endpoints', () => {
+  it('should get the query string for multiple chaning endpoints', () => {
     const query = [
       {
         from: 'heroes',
@@ -229,7 +229,7 @@ describe('transform a query object into a string', () => {
     );
   });
 
-  it('should get the query with expansion and enconding functions applied to it', () => {
+  it('should get the query string with expansion and enconding functions applied to it', () => {
     const query = {
       from: 'heroes',
       as: 'hero',
@@ -252,7 +252,7 @@ describe('transform a query object into a string', () => {
     );
   });
 
-  it('should get the query with filters applied to it', () => {
+  it('should get the query string with filters applied to it', () => {
     const query = {
       from: 'heroes',
       as: 'hero',

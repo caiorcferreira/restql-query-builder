@@ -2,7 +2,7 @@
   "name": "restql-query-builder",
   "version": "0.0.1",
   "description": "A builder for ad-hoc RestQL query requests.",
-  "main": "./dist/index.js",
+  "main": "./dist/queryBuilder.js",
   "scripts": {
     "start": "npm run dev",
     "dev": "npm test",
@@ -33,15 +33,8 @@
     "type": "git",
     "url": "git+https://github.com/caiorcferreira/restql-query-builder.git"
   },
-  "keywords": [
-    "restql",
-    "query",
-    "ad-hoc",
-    "javascript"
-  ],
-  "files": [
-    "dist"
-  ],
+  "keywords": ["restql", "query", "ad-hoc", "javascript"],
+  "files": ["dist"],
   "author": "Caio Ferreira <caiorcferreira@gmail.com> (https://github.com/caiorcferreira)",
   "license": "MIT",
   "bugs": {

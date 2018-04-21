@@ -1,4 +1,4 @@
-import queryBuilder from '../src';
+import queryBuilder from '../src/queryBuilder';
 
 describe('RestQL query builder', () => {
   it('should get an empty string when no query is provided', () => {

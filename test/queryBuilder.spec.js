@@ -1,4 +1,5 @@
 import queryBuilder from '../src/queryBuilder';
+import { getContextFromQuery } from '../src/context';
 
 describe('RestQL query builder', () => {
   it('should get an empty string when no query is provided', () => {
@@ -197,19 +198,36 @@ describe('RestQL query builder', () => {
     const builder = queryBuilder()
       .from('heroes')
       .as('hero')
-      .with('flatten', 'using', ['sword', 'shield']);
+      .with('using', ['sword', 'shield'])
+      .apply('flatten')
+      .only('name')
+      .apply('matches(^Super)');
 
-    expect(builder.toQueryMap()).toHaveBeenCalledWith({
+    expect(builder.toQueryMap()).toEqual({
       from: 'heroes',
       as: 'hero',
       with: {
         using: ['sword', 'shield']
       },
+      only: ['name'],
       apply: {
         with: {
           using: 'flatten'
+        },
+        only: {
+          name: 'matches(^Super)'
         }
       }
     });
+  });
+
+  it('should get the complete query context', () => {
+    const query = queryBuilder()
+      .from('heroes')
+      .toQueryMap();
+
+    const queryContext = getContextFromQuery(query);
+
+    expect(queryContext).toEqual([{ form: 'FROM', params: ['heroes'] }]);
   });
 });

@@ -1,6 +1,6 @@
 import 'babel-polyfill';
+import 'reflect-metadata';
 import {
-  curry,
   compose,
   assoc,
   assocPath,
@@ -9,52 +9,63 @@ import {
   identity,
   always,
   cond,
-  chain
+  chain,
+  tap,
+  __
 } from 'ramda';
 
 import stringify from './stringify';
-
-const modifiers = function(query) {
-  return (...modifiersPairs) =>
-    compose(modifiers => assoc('modifiers', modifiers, query), fromPairs)(modifiersPairs);
-};
-
-const from = curry(function(query, endpoint) {
-  return assoc('from', endpoint, query);
-});
-
-const as = curry(function(query, alias) {
-  return assoc('as', alias, query);
-});
-
-const headers = function(query) {
-  return (...headersPairs) =>
-    compose(headers => assoc('headers', headers, query), fromPairs)(headersPairs);
-};
-
-const timeout = curry(function(query, timeoutValue) {
-  return assoc('timeout', timeoutValue, query);
-});
-
-const withClause = curry(function(query, key, value) {
-  return assocPath(['with', key], value, query);
-});
-
-const only = function(query) {
-  return (...onlyFilters) => assoc('only', onlyFilters, query);
-};
-
-const hidden = function(query) {
-  return assoc('hidden', true, query);
-};
-
-const ignoreErrors = function(query) {
-  return assoc('ignoreErrors', true, query);
-};
+import { context, setContext } from './context';
 
 const toArray = cond([[is(Array), identity], [always(true), Array.of]]);
 
-const concatQueries = curry(function(aQuery, otherQuery) {
+const modifiers = context(function(query, ...modifiersPairs) {
+  return compose(
+    assoc('modifiers', __, query),
+    tap(setContext('MODIFIERS', __, query)),
+    fromPairs
+  )(modifiersPairs);
+});
+
+const from = context(function(query, endpoint) {
+  return compose(assoc('from', endpoint), setContext('FROM', endpoint))(query);
+});
+
+const as = context(function(query, alias) {
+  return assoc('as', alias, query);
+});
+
+const headers = context(function(query, ...headersPairs) {
+  return compose(headers => assoc('headers', headers, query), fromPairs)(headersPairs);
+});
+
+const timeout = context(function(query, timeoutValue) {
+  return assoc('timeout', timeoutValue, query);
+});
+
+const withClause = context(function(query, key, value) {
+  const newQuery = assocPath(['with', key], value, query);
+  Reflect.defineMetadata('WITH_CLAUSE', { [key]: value }, newQuery);
+  return newQuery;
+});
+
+const only = context(function(query, ...onlyFilters) {
+  return assoc('only', onlyFilters, query);
+});
+
+const hidden = context(function(query) {
+  return assoc('hidden', true, query);
+});
+
+const ignoreErrors = context(function(query) {
+  return assoc('ignoreErrors', true, query);
+});
+
+const apply = context(function(query, funcName) {
+  return assocPath(['apply', 'with', 'using'], funcName, query);
+});
+
+const concatQueries = context(function(aQuery, otherQuery) {
   return chain(toArray, [aQuery, otherQuery]);
 });
 
@@ -67,8 +78,9 @@ function queryBuilder(query = {}) {
     timeout: compose(queryBuilder, timeout(query)),
     with: compose(queryBuilder, withClause(query)),
     only: compose(queryBuilder, only(query)),
-    hidden: compose(queryBuilder, () => hidden(query)),
-    ignoreErrors: compose(queryBuilder, () => ignoreErrors(query)),
+    hidden: compose(queryBuilder, hidden(query)),
+    ignoreErrors: compose(queryBuilder, ignoreErrors(query)),
+    apply: compose(queryBuilder, apply(query)),
     concat: concatQueries(query),
     toQueryString: () => stringify(query),
     toQueryMap: () => query

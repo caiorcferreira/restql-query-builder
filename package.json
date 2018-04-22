@@ -15,7 +15,8 @@
   },
   "dependencies": {
     "babel-polyfill": "^6.26.0",
-    "ramda": "^0.25.0"
+    "ramda": "^0.25.0",
+    "reflect-metadata": "^0.1.12"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -33,8 +34,15 @@
     "type": "git",
     "url": "git+https://github.com/caiorcferreira/restql-query-builder.git"
   },
-  "keywords": ["restql", "query", "ad-hoc", "javascript"],
-  "files": ["dist"],
+  "keywords": [
+    "restql",
+    "query",
+    "ad-hoc",
+    "javascript"
+  ],
+  "files": [
+    "dist"
+  ],
   "author": "Caio Ferreira <caiorcferreira@gmail.com> (https://github.com/caiorcferreira)",
   "license": "MIT",
   "bugs": {

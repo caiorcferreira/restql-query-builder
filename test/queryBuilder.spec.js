@@ -38,32 +38,32 @@ describe('RestQL query builder', () => {
   });
 
   it('should get a query for the given endpoint', () => {
-    const query = queryBuilder().from('heroes');
+    const builder = queryBuilder().from('heroes');
 
-    expect(query.toQueryMap()).toEqual({
+    expect(builder.toQueryMap()).toEqual({
       from: 'heroes'
     });
   });
 
   it('should get a query for the given endpoint binded to the given alias', () => {
-    const query = queryBuilder()
+    const builder = queryBuilder()
       .from('heroes')
       .as('hero');
 
-    expect(query.toQueryMap()).toEqual({
+    expect(builder.toQueryMap()).toEqual({
       from: 'heroes',
       as: 'hero'
     });
   });
 
   it('should get a query for the given with clauses', () => {
-    const query = queryBuilder()
+    const builder = queryBuilder()
       .from('heroes')
       .as('hero')
       .with('name', 'Link')
       .with('level', 10);
 
-    expect(query.toQueryMap()).toEqual({
+    expect(builder.toQueryMap()).toEqual({
       from: 'heroes',
       as: 'hero',
       with: {
@@ -74,15 +74,142 @@ describe('RestQL query builder', () => {
   });
 
   it('should get a query for the given only filters', () => {
-    const query = queryBuilder()
+    const builder = queryBuilder()
       .from('heroes')
       .as('hero')
       .only('name', 'level');
 
-    expect(query.toQueryMap()).toEqual({
+    expect(builder.toQueryMap()).toEqual({
       from: 'heroes',
       as: 'hero',
       only: ['name', 'level']
+    });
+  });
+
+  it('should get a query for the given headers', () => {
+    const builder = queryBuilder()
+      .from('heroes')
+      .as('hero')
+      .headers(['Accept', 'application/json'], ['Authorization', 'Basic user:pass']);
+
+    expect(builder.toQueryMap()).toEqual({
+      from: 'heroes',
+      as: 'hero',
+      headers: {
+        Accept: 'application/json',
+        Authorization: 'Basic user:pass'
+      }
+    });
+  });
+
+  it('should get a query with the given timeout', () => {
+    const builder = queryBuilder()
+      .from('heroes')
+      .as('hero')
+      .timeout(500);
+
+    expect(builder.toQueryMap()).toEqual({
+      from: 'heroes',
+      as: 'hero',
+      timeout: 500
+    });
+  });
+
+  it('should get a query with hidden set', () => {
+    const builder = queryBuilder()
+      .from('heroes')
+      .as('hero')
+      .with('name', 'Link')
+      .hidden();
+
+    expect(builder.toQueryMap()).toEqual({
+      from: 'heroes',
+      as: 'hero',
+      with: {
+        name: 'Link'
+      },
+      hidden: true
+    });
+  });
+
+  it('should get a query with ignore errors set', () => {
+    const builder = queryBuilder()
+      .from('heroes')
+      .as('hero')
+      .ignoreErrors();
+
+    expect(builder.toQueryMap()).toEqual({
+      from: 'heroes',
+      as: 'hero',
+      ignoreErrors: true
+    });
+  });
+
+  it('should get a query with the given modifiers', () => {
+    const builder = queryBuilder()
+      .modifiers(['use-cache', 600])
+      .from('heroes')
+      .as('hero');
+
+    expect(builder.toQueryMap()).toEqual({
+      modifiers: {
+        'use-cache': 600
+      },
+      from: 'heroes',
+      as: 'hero'
+    });
+  });
+
+  it('should get a multiendpoint query', () => {
+    const heroQuery = queryBuilder()
+      .from('heroes')
+      .as('hero')
+      .with('name', 'Link')
+      .toQueryMap();
+
+    const weaponQuery = queryBuilder()
+      .from('weapons')
+      .as('weapon')
+      .with('heroId', 'hero.id')
+      .toQueryMap();
+
+    const query = queryBuilder(heroQuery).concat(weaponQuery);
+
+    expect(query).toEqual([
+      {
+        from: 'heroes',
+        as: 'hero',
+        with: {
+          name: 'Link'
+        }
+      },
+      {
+        from: 'weapons',
+        as: 'weapon',
+        with: {
+          heroId: 'hero.id'
+        }
+      }
+    ]);
+  });
+
+  it('should get a query with the given functions applied', () => {
+    const builder = queryBuilder()
+      .from('heroes')
+      .as('hero')
+      .with('flatten', 'using', ['sword', 'shield']);
+
+    expect(builder.toQueryMap()).toHaveBeenCalledWith({
+      from: 'heroes',
+      as: 'hero',
+      with: {
+        using: ['sword', 'shield']
+      },
+      apply: {
+        with: {
+          using: 'flatten'
+        }
+      }
     });
   });
 });

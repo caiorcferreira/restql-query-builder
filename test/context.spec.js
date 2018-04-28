@@ -1,62 +1,110 @@
-import { clone } from 'ramda';
-import { context, copyMetadata, getContextFromQuery, setContext } from '../src/context';
+import { compose, assoc, map } from 'ramda';
+import {
+  bindContext,
+  copyMetadata,
+  getContextFromTarget,
+  setContext,
+  setTargetAsContextInstance
+} from '../src/context';
 
 describe('Query building context', () => {
-  it('should copy context metadata from an query to a new one', () => {
-    const query = {
+  describe('get and set context', () => {
+    const getMetadata = obj =>
+      compose(map(key => Reflect.getOwnMetadata(key, obj)), Reflect.getOwnMetadataKeys)(obj);
+
+    it('should get the context from a query', () => {
+      const target = {};
+      Reflect.defineMetadata('1', { key: 'FROM', context: ['heroes'] }, target);
+
+      const context = getContextFromTarget(target);
+
+      expect(context).toContainEqual({ key: 'FROM', context: ['heroes'] });
+    });
+
+    it('should set context for the given form', () => {
+      const target = {};
+
+      const result = setContext('FROM', 'heroes', target);
+
+      const context = getMetadata(result);
+
+      expect(context).toContainEqual({ key: 'FROM', params: ['heroes'] });
+    });
+
+    it('should set context for repetitive form', () => {
+      const target = {};
+
+      const result = compose(
+        setContext('WITH', ['health', 100]),
+        setContext('WITH', ['name', 'Link'])
+      )(target);
+
+      const context = getMetadata(result);
+
+      expect(context).toContainEqual({ key: 'WITH', params: ['name', 'Link'] });
+      expect(context).toContainEqual({ key: 'WITH', params: ['health', 100] });
+    });
+  });
+
+  it('should copy context metadata from an origin to a target', () => {
+    const target = {};
+    const origin = {
       from: 'heroes',
       as: 'hero'
     };
-    Reflect.defineMetadata('FROM', 'heroes', query);
-    Reflect.defineMetadata('AS', 'hero', query);
+    Reflect.defineMetadata('FROM', 'heroes', origin);
+    Reflect.defineMetadata('AS', 'hero', origin);
 
-    const otherQuery = copyMetadata(query, {});
+    const updatedTarget = copyMetadata(origin, target);
 
-    const metadataKeys = Reflect.getOwnMetadataKeys(otherQuery);
+    const metadataKeys = Reflect.getOwnMetadataKeys(updatedTarget);
 
     expect(metadataKeys).toEqual(['FROM', 'AS']);
   });
 
-  it('should create a function from another that preserve the context', () => {
-    const query = {
-      from: 'heroes',
-      as: 'hero'
-    };
-    Reflect.defineMetadata('FROM', 'heroes', query);
-    Reflect.defineMetadata('AS', 'hero', query);
-    const cloneContextAware = context(clone);
+  describe('bindContext', () => {
+    it('should create a function that set the evaluator result as a context instance if there is none context instance in the evalatour parameters', () => {
+      const target = {};
+      const evaluator = assoc('aKey', 'aValue');
+      const contextAwareEvaluator = bindContext('EVALUATING', evaluator);
 
-    const otherQuery = cloneContextAware(query)();
-    const metadataKeys = Reflect.getOwnMetadataKeys(otherQuery);
+      const evaluatedTarget = contextAwareEvaluator(target);
+      const targetContextKeys = Reflect.getOwnMetadataKeys(evaluatedTarget);
 
-    expect(metadataKeys).toEqual(['FROM', 'AS']);
-  });
+      expect(targetContextKeys).toContain('CONTEXT_INSTANCE');
+    });
 
-  it('should get the context from a query', () => {
-    const query = {
-      from: 'heroes',
-      as: 'hero'
-    };
-    Reflect.defineMetadata('FROM', ['heroes'], query);
-    Reflect.defineMetadata('AS', ['hero'], query);
+    it('should create a function that bound the evaluator parameters to a given context key in the resulting query', () => {
+      const target = setTargetAsContextInstance({});
+      const evaluator = assoc('aKey', 'aValue');
+      const contextAwareEvaluator = bindContext('A_KEY', evaluator);
 
-    const context = getContextFromQuery(query);
+      const result = contextAwareEvaluator(target);
+      const resultContext = getContextFromTarget(result);
 
-    expect(context).toEqual([
-      { form: 'FROM', params: ['heroes'] },
-      { form: 'AS', params: ['hero'] }
-    ]);
-  });
+      expect(resultContext).toContainEqual({ key: 'A_KEY', params: [] });
+    });
 
-  it('should set context for the given form', () => {
-    const query = {
-      from: 'heroes'
-    };
+    it('should create a function that bound the evaluator parameters, except the context instance, to a given context key in the resulting query', () => {
+      const target = setTargetAsContextInstance({});
+      const evaluator = assoc('aKey');
+      const contextAwareEvaluator = bindContext('A_KEY', evaluator);
 
-    const updatedQuery = setContext('FROM', 'heroes', query);
+      const result = contextAwareEvaluator('aValue', target);
+      const resultContext = getContextFromTarget(result);
 
-    const context = getContextFromQuery(updatedQuery);
+      expect(resultContext).toContainEqual({ key: 'A_KEY', params: ['aValue'] });
+    });
 
-    expect(context).toEqual([{ form: 'FROM', params: ['heroes'] }]);
+    it('should create a function that preverse the context from the original target', () => {
+      const target = {};
+      const evaluator = assoc('from');
+      const contextAwareEvaluator = bindContext('FROM', evaluator);
+
+      const result = contextAwareEvaluator('heroes', target);
+      const resultContext = getContextFromTarget(result);
+
+      expect(resultContext).toContainEqual({ key: 'FROM', params: ['heroes', {}] });
+    });
   });
 });

@@ -70,7 +70,7 @@ export function hasContextInstance(params) {
 
 export const setTargetAsContextInstance = defineMetadata(__, 'CONTEXT_INSTANCE', true);
 
-export function bindContext(contextKey, evaluator) {
+export const bindContext = curry(function(contextKey, evaluator) {
   return (...params) => {
     const result = evaluator(...params);
     const paramsWithoutContextInstance = filter(compose(not, isContextInstance), params);
@@ -80,4 +80,4 @@ export function bindContext(contextKey, evaluator) {
       cond([[K(hasContextInstance(params)), identity], [K(true), setTargetAsContextInstance]])
     )(result);
   };
-}
+});

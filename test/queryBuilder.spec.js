@@ -1,233 +1,165 @@
-import queryBuilder from '../src/queryBuilder';
-import { getContextFromQuery } from '../src/context';
+// Builder<T> = Builder of (T -> T)
 
-describe('RestQL query builder', () => {
-  it('should get an empty string when no query is provided', () => {
-    const restQlQuery = queryBuilder().toQueryString();
+import {
+  run,
+  andThen,
+  fromBuilder,
+  asBuilder,
+  timeoutBuilder,
+  headerBuilder,
+  withBuilder,
+  onlyBuilder,
+  hiddenBuilder,
+  ignoreErrorsBuilder,
+  modifiersBuilder,
+  applyBuilder
+} from '../src/queryBuilder';
 
-    expect(restQlQuery).toBe('');
-  });
-
-  it('should get the string form of a query', () => {
-    const query = {
-      from: 'heroes',
-      as: 'hero',
-      with: {
-        name: 'Link',
-        money: 100
-      },
-      only: ['name'],
-      ignoreErrors: true
+describe('Query Builder', () => {
+  it('should run a builder with an input', () => {
+    const stringJoinBuilder = input => {
+      return Array.of('HELLO', input).join(' ');
     };
 
-    const restQlQuery = queryBuilder(query).toQueryString();
+    const result = run(stringJoinBuilder, 'COMBINATORS');
 
-    expect(restQlQuery).toBe(
-      'from heroes as hero\nwith name = "Link", money = 100\nonly name\nignore-errors'
-    );
+    expect(result).toBe('HELLO COMBINATORS');
   });
 
-  it('should get query map for the given settings', () => {
+  it('should create a chaining builder from two builders', () => {
+    const greetBuilder = input => {
+      const newMessage = 'HELLO';
+      const finalMessage = Array.of(newMessage, input).join(' ');
+
+      return [newMessage, finalMessage];
+    };
+    const exclamationBuilder = input => {
+      const newMessage = '!';
+      const finalMessage = Array.of(input, newMessage).join('');
+
+      return [newMessage, finalMessage];
+    };
+    const happyGreeterBuilder = andThen(greetBuilder, exclamationBuilder);
+
+    const result = run(happyGreeterBuilder, 'COMBINATORS');
+
+    expect(result).toContainEqual('HELLO COMBINATORS!');
+  });
+
+  it('should create query from block', () => {
+    const initialQuery = {};
+    const fromResource = 'heroes';
+
+    const fromBlock = run(fromBuilder(fromResource), initialQuery);
+
+    expect(fromBlock).toEqual([{ from: 'heroes' }, { from: 'heroes' }]);
+  });
+
+  it('should create query as block', () => {
     const initialQuery = {
-      from: 'heroes',
-      as: 'hero'
-    };
-
-    const query = queryBuilder(initialQuery).toQueryMap();
-
-    expect(query).toEqual(initialQuery);
-  });
-
-  it('should get a query for the given endpoint', () => {
-    const builder = queryBuilder().from('heroes');
-
-    expect(builder.toQueryMap()).toEqual({
       from: 'heroes'
-    });
+    };
+    const resultAlias = 'hero';
+
+    const asBlock = run(asBuilder(resultAlias), initialQuery);
+
+    expect(asBlock).toEqual([{ as: 'hero' }, { from: 'heroes', as: 'hero' }]);
   });
 
-  it('should get a query for the given endpoint binded to the given alias', () => {
-    const builder = queryBuilder()
-      .from('heroes')
-      .as('hero');
+  it('should create query timeout block', () => {
+    const initialQuery = {
+      from: 'heroes'
+    };
+    const timeoutValue = 200;
 
-    expect(builder.toQueryMap()).toEqual({
-      from: 'heroes',
-      as: 'hero'
-    });
+    const timeoutBlock = run(timeoutBuilder(timeoutValue), initialQuery);
+
+    expect(timeoutBlock).toEqual([{ timeout: 200 }, { from: 'heroes', timeout: 200 }]);
   });
 
-  it('should get a query for the given with clauses', () => {
-    const builder = queryBuilder()
-      .from('heroes')
-      .as('hero')
-      .with('name', 'Link')
-      .with('level', 10);
+  it('should create query header block', () => {
+    const initialQuery = { from: 'heroes' };
+    const headers = [['Accept', 'application/json'], ['Authorization', 'Basic user:pass']];
 
-    expect(builder.toQueryMap()).toEqual({
-      from: 'heroes',
-      as: 'hero',
-      with: {
-        name: 'Link',
-        level: 10
-      }
-    });
-  });
+    const headerBlock = run(headerBuilder(headers), initialQuery);
 
-  it('should get a query for the given only filters', () => {
-    const builder = queryBuilder()
-      .from('heroes')
-      .as('hero')
-      .only('name', 'level');
-
-    expect(builder.toQueryMap()).toEqual({
-      from: 'heroes',
-      as: 'hero',
-      only: ['name', 'level']
-    });
-  });
-
-  it('should get a query for the given headers', () => {
-    const builder = queryBuilder()
-      .from('heroes')
-      .as('hero')
-      .headers(['Accept', 'application/json'], ['Authorization', 'Basic user:pass']);
-
-    expect(builder.toQueryMap()).toEqual({
-      from: 'heroes',
-      as: 'hero',
-      headers: {
-        Accept: 'application/json',
-        Authorization: 'Basic user:pass'
-      }
-    });
-  });
-
-  it('should get a query with the given timeout', () => {
-    const builder = queryBuilder()
-      .from('heroes')
-      .as('hero')
-      .timeout(500);
-
-    expect(builder.toQueryMap()).toEqual({
-      from: 'heroes',
-      as: 'hero',
-      timeout: 500
-    });
-  });
-
-  it('should get a query with hidden set', () => {
-    const builder = queryBuilder()
-      .from('heroes')
-      .as('hero')
-      .with('name', 'Link')
-      .hidden();
-
-    expect(builder.toQueryMap()).toEqual({
-      from: 'heroes',
-      as: 'hero',
-      with: {
-        name: 'Link'
-      },
-      hidden: true
-    });
-  });
-
-  it('should get a query with ignore errors set', () => {
-    const builder = queryBuilder()
-      .from('heroes')
-      .as('hero')
-      .ignoreErrors();
-
-    expect(builder.toQueryMap()).toEqual({
-      from: 'heroes',
-      as: 'hero',
-      ignoreErrors: true
-    });
-  });
-
-  it('should get a query with the given modifiers', () => {
-    const builder = queryBuilder()
-      .modifiers(['use-cache', 600])
-      .from('heroes')
-      .as('hero');
-
-    expect(builder.toQueryMap()).toEqual({
-      modifiers: {
-        'use-cache': 600
-      },
-      from: 'heroes',
-      as: 'hero'
-    });
-  });
-
-  it('should get a multiendpoint query', () => {
-    const heroQuery = queryBuilder()
-      .from('heroes')
-      .as('hero')
-      .with('name', 'Link')
-      .toQueryMap();
-
-    const weaponQuery = queryBuilder()
-      .from('weapons')
-      .as('weapon')
-      .with('heroId', 'hero.id')
-      .toQueryMap();
-
-    const query = queryBuilder(heroQuery).concat(weaponQuery);
-
-    expect(query).toEqual([
-      {
-        from: 'heroes',
-        as: 'hero',
-        with: {
-          name: 'Link'
-        }
-      },
-      {
-        from: 'weapons',
-        as: 'weapon',
-        with: {
-          heroId: 'hero.id'
-        }
-      }
+    expect(headerBlock).toEqual([
+      { headers: { Accept: 'application/json', Authorization: 'Basic user:pass' } },
+      { from: 'heroes', headers: { Accept: 'application/json', Authorization: 'Basic user:pass' } }
     ]);
   });
 
-  it('should get a query with the given functions applied', () => {
-    const builder = queryBuilder()
-      .from('heroes')
-      .as('hero')
-      .with('using', ['sword', 'shield'])
-      .apply('flatten')
-      .only('name')
-      .apply('matches(^Super)');
+  it('should create query "with" block', () => {
+    const initialQuery = { from: 'heroes' };
+    const paramName = 'name';
+    const paramValue = 'Link';
 
-    expect(builder.toQueryMap()).toEqual({
-      from: 'heroes',
-      as: 'hero',
-      with: {
-        using: ['sword', 'shield']
-      },
-      only: ['name'],
-      apply: {
-        with: {
-          using: 'flatten'
-        },
-        only: {
-          name: 'matches(^Super)'
-        }
-      }
-    });
+    const withBlock = run(withBuilder(paramName, paramValue), initialQuery);
+
+    expect(withBlock).toEqual([
+      { with: { name: 'Link' } },
+      { from: 'heroes', with: { name: 'Link' } }
+    ]);
   });
 
-  it('should get the complete query context', () => {
-    const query = queryBuilder()
-      .from('heroes')
-      .toQueryMap();
+  it('should create query "only" block', () => {
+    const initialQuery = { from: 'heroes' };
 
-    const queryContext = getContextFromQuery(query);
+    const composedOnlyBuilder = andThen(onlyBuilder('name'), onlyBuilder('stats'));
+    const onlyBlock = run(composedOnlyBuilder, initialQuery);
 
-    expect(queryContext).toEqual([{ form: 'FROM', params: ['heroes'] }]);
+    expect(onlyBlock).toEqual([{ only: ['stats'] }, { from: 'heroes', only: ['name', 'stats'] }]);
+  });
+
+  it('should create query "hidden" block', () => {
+    const initialQuery = { from: 'heroes' };
+
+    const hiddenBlock = run(hiddenBuilder(), initialQuery);
+
+    expect(hiddenBlock).toEqual([{ hidden: true }, { from: 'heroes', hidden: true }]);
+  });
+
+  it('should create query "ignore errors" block', () => {
+    const initialQuery = { from: 'heroes' };
+    const ignoreErrors = true;
+
+    const ignoreErrorsBlock = run(ignoreErrorsBuilder(ignoreErrors), initialQuery);
+
+    expect(ignoreErrorsBlock).toEqual([
+      { ignoreErrors: true },
+      { from: 'heroes', ignoreErrors: true }
+    ]);
+  });
+
+  it('should create query "use" block', () => {
+    const initialQuery = { from: 'heroes' };
+    const modifiers = [['use-cache', 600]];
+
+    const modifiersBlock = run(modifiersBuilder(modifiers), initialQuery);
+
+    expect(modifiersBlock).toEqual([
+      { modifiers: { 'use-cache': 600 } },
+      { from: 'heroes', modifiers: { 'use-cache': 600 } }
+    ]);
+  });
+
+  it('should create apply operator for the last operation', () => {
+    const initialQuery = { from: 'heroes' };
+    const operatorFunctionName = 'flatten';
+    const paramName = 'using';
+    const paramValue = ['sword', 'shield'];
+
+    const builder = withBuilder(paramName, paramValue);
+    const queryBuilder = applyBuilder(builder, operatorFunctionName);
+    const applyOperatorBlock = run(queryBuilder, initialQuery);
+
+    expect(applyOperatorBlock).toEqual([
+      { apply: { with: { using: 'flatten' } } },
+      {
+        from: 'heroes',
+        with: { using: ['sword', 'shield'] },
+        apply: { with: { using: 'flatten' } }
+      }
+    ]);
   });
 });

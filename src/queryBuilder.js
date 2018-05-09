@@ -1,90 +1,129 @@
-import 'babel-polyfill';
-import 'reflect-metadata';
 import {
+  __,
+  curry,
   compose,
   assoc,
   assocPath,
+  merge,
   fromPairs,
+  cond,
   is,
   identity,
   always,
-  cond,
-  chain,
-  tap,
-  __
+  mergeWith,
+  concat
 } from 'ramda';
-
-import stringify from './stringify';
-import { context, setContext } from './context';
 
 const toArray = cond([[is(Array), identity], [always(true), Array.of]]);
 
-const modifiers = context(function(query, ...modifiersPairs) {
-  return compose(
-    assoc('modifiers', __, query),
-    tap(setContext('MODIFIERS', __, query)),
-    fromPairs
-  )(modifiersPairs);
-});
+export const run = function(builder, input) {
+  return builder(input);
+};
 
-const from = context(function(query, endpoint) {
-  return compose(assoc('from', endpoint), setContext('FROM', endpoint))(query);
-});
+export const andThen = curry(function(firstBuilder, secondBuilder) {
+  const chainedFn = input => {
+    const firstResult = run(firstBuilder, input);
 
-const as = context(function(query, alias) {
-  return assoc('as', alias, query);
-});
+    const firstAccumulatedResult = firstResult[1];
+    const secondResult = run(secondBuilder, firstAccumulatedResult);
 
-const headers = context(function(query, ...headersPairs) {
-  return compose(headers => assoc('headers', headers, query), fromPairs)(headersPairs);
-});
-
-const timeout = context(function(query, timeoutValue) {
-  return assoc('timeout', timeoutValue, query);
-});
-
-const withClause = context(function(query, key, value) {
-  const newQuery = assocPath(['with', key], value, query);
-  Reflect.defineMetadata('WITH_CLAUSE', { [key]: value }, newQuery);
-  return newQuery;
-});
-
-const only = context(function(query, ...onlyFilters) {
-  return assoc('only', onlyFilters, query);
-});
-
-const hidden = context(function(query) {
-  return assoc('hidden', true, query);
-});
-
-const ignoreErrors = context(function(query) {
-  return assoc('ignoreErrors', true, query);
-});
-
-const apply = context(function(query, funcName) {
-  return assocPath(['apply', 'with', 'using'], funcName, query);
-});
-
-const concatQueries = context(function(aQuery, otherQuery) {
-  return chain(toArray, [aQuery, otherQuery]);
-});
-
-function queryBuilder(query = {}) {
-  return {
-    modifiers: compose(queryBuilder, modifiers(query)),
-    from: compose(queryBuilder, from(query)),
-    as: compose(queryBuilder, as(query)),
-    headers: compose(queryBuilder, headers(query)),
-    timeout: compose(queryBuilder, timeout(query)),
-    with: compose(queryBuilder, withClause(query)),
-    only: compose(queryBuilder, only(query)),
-    hidden: compose(queryBuilder, hidden(query)),
-    ignoreErrors: compose(queryBuilder, ignoreErrors(query)),
-    apply: compose(queryBuilder, apply(query)),
-    concat: concatQueries(query),
-    toQueryString: () => stringify(query),
-    toQueryMap: () => query
+    return secondResult;
   };
-}
 
-export default queryBuilder;
+  return chainedFn;
+});
+
+export const bmap = curry(function(f, builder) {
+  return input => {
+    const result = run(builder, input);
+    const value = result[0];
+
+    const newValue = f(value);
+
+    return [newValue, result[1]];
+  };
+});
+
+export const fromBuilder = function(fromResource) {
+  return accumulatedValue => {
+    const newValue = assoc('from', fromResource, {});
+    const accumlatedResult = merge(accumulatedValue, newValue);
+    return [newValue, accumlatedResult];
+  };
+};
+
+export const asBuilder = function(resultAlias) {
+  return accumulatedValue => {
+    const newValue = assoc('as', resultAlias, {});
+    const accumlatedResult = merge(accumulatedValue, newValue);
+    return [newValue, accumlatedResult];
+  };
+};
+
+export const timeoutBuilder = function(timeoutValue) {
+  return accumulatedValue => {
+    const newValue = assoc('timeout', timeoutValue, {});
+    const accumlatedResult = merge(accumulatedValue, newValue);
+    return [newValue, accumlatedResult];
+  };
+};
+
+export const headerBuilder = function(headersPairs) {
+  return accumulatedValue => {
+    const newValue = compose(assoc('headers', __, {}), fromPairs)(headersPairs);
+    const accumlatedResult = merge(accumulatedValue, newValue);
+    return [newValue, accumlatedResult];
+  };
+};
+
+export const withBuilder = curry(function(paramName, paramValue) {
+  return accumulatedValue => {
+    const newValue = assocPath(['with', paramName], paramValue, {});
+    const accumlatedResult = merge(accumulatedValue, newValue);
+    return [newValue, accumlatedResult];
+  };
+});
+
+export const onlyBuilder = function(onlyItems) {
+  return accumulatedValue => {
+    const newValue = assoc('only', toArray(onlyItems), {});
+    const accumlatedResult = mergeWith(concat, accumulatedValue, newValue);
+    return [newValue, accumlatedResult];
+  };
+};
+
+export const hiddenBuilder = function() {
+  return accumulatedValue => {
+    const newValue = assoc('hidden', true, {});
+    const accumlatedResult = merge(accumulatedValue, newValue);
+    return [newValue, accumlatedResult];
+  };
+};
+
+export const ignoreErrorsBuilder = function() {
+  return accumulatedValue => {
+    const newValue = assoc('ignoreErrors', true, {});
+    const accumlatedResult = merge(accumulatedValue, newValue);
+    return [newValue, accumlatedResult];
+  };
+};
+
+export const modifiersBuilder = function(modifiersPairs) {
+  return accumulatedValue => {
+    const newValue = compose(assoc('modifiers', __, {}), fromPairs)(modifiersPairs);
+    const accumlatedResult = merge(accumulatedValue, newValue);
+    return [newValue, accumlatedResult];
+  };
+};
+
+export const applyBuilder = function(builder, applyFunctionName) {
+  return accumulatedValue => {
+    const apply = bmap(value => {
+      return { apply: { with: { using: 'flatten' } } };
+    }, builder);
+
+    const result = apply(accumulatedValue);
+    const accumlatedResult = merge(result[1], result[0]);
+    return [result[0], accumlatedResult];
+  };
+};

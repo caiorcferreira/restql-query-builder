@@ -2,6 +2,7 @@ import {
   __,
   curry,
   compose,
+  equals,
   assoc,
   assocPath,
   merge,
@@ -11,7 +12,13 @@ import {
   identity,
   always,
   mergeWith,
-  concat
+  concat,
+  head,
+  last,
+  toPairs,
+  flatten,
+  converge,
+  juxt
 } from 'ramda';
 
 const toArray = cond([[is(Array), identity], [always(true), Array.of]]);
@@ -116,14 +123,29 @@ export const modifiersBuilder = function(modifiersPairs) {
   };
 };
 
-export const applyBuilder = function(builder, applyFunctionName) {
+const getApplyTargetFromBlock = function(block) {
+  return cond([
+    [compose(equals('with'), head), compose(head, flatten, toPairs, last)],
+    [compose(equals('only'), head), last]
+  ])(block);
+};
+
+export const applyBuilder = function(applyFunctionName, builder) {
   return accumulatedValue => {
-    const apply = bmap(value => {
-      return { apply: { with: { using: 'flatten' } } };
+    const applyOperator = bmap(value => {
+      const block = compose(head, toPairs)(value);
+      const blockKey = head(block);
+      const applyTarget = getApplyTargetFromBlock(block);
+
+      return {
+        apply: {
+          [blockKey]: {
+            [applyTarget]: applyFunctionName
+          }
+        }
+      };
     }, builder);
 
-    const result = apply(accumulatedValue);
-    const accumlatedResult = merge(result[1], result[0]);
-    return [result[0], accumlatedResult];
+    return compose(juxt([head, converge(merge, [last, head])]), applyOperator)(accumulatedValue);
   };
 };

@@ -143,23 +143,42 @@ describe('Query Builder', () => {
     ]);
   });
 
-  it('should create apply operator for the last operation', () => {
-    const initialQuery = { from: 'heroes' };
-    const operatorFunctionName = 'flatten';
-    const paramName = 'using';
-    const paramValue = ['sword', 'shield'];
+  describe('apply operator', () => {
+    it('should define the apply operator to the with block for the given function name', () => {
+      const initialQuery = { from: 'heroes' };
+      const operatorFunctionName = 'flatten';
+      const paramName = 'using';
+      const paramValue = ['sword', 'shield'];
 
-    const builder = withBuilder(paramName, paramValue);
-    const queryBuilder = applyBuilder(builder, operatorFunctionName);
-    const applyOperatorBlock = run(queryBuilder, initialQuery);
+      const builder = withBuilder(paramName, paramValue);
+      const queryBuilder = applyBuilder(operatorFunctionName, builder);
+      const applyOperatorBlock = run(queryBuilder, initialQuery);
 
-    expect(applyOperatorBlock).toEqual([
-      { apply: { with: { using: 'flatten' } } },
-      {
-        from: 'heroes',
-        with: { using: ['sword', 'shield'] },
-        apply: { with: { using: 'flatten' } }
-      }
-    ]);
+      expect(applyOperatorBlock).toEqual([
+        { apply: { with: { using: 'flatten' } } },
+        {
+          from: 'heroes',
+          with: { using: ['sword', 'shield'] },
+          apply: { with: { using: 'flatten' } }
+        }
+      ]);
+    });
+
+    it('should define the apply operator to the only block or the given function name', () => {
+      const initialQuery = { from: 'heroes' };
+
+      const builder = andThen(onlyBuilder('skills'), onlyBuilder('name'));
+      const queryBuilder = applyBuilder('matches("^Super")', builder);
+      const applyOperatorBlock = run(queryBuilder, initialQuery);
+
+      expect(applyOperatorBlock).toEqual([
+        { apply: { only: { name: 'matches("^Super")' } } },
+        {
+          from: 'heroes',
+          only: ['skills', 'name'],
+          apply: { only: { name: 'matches("^Super")' } }
+        }
+      ]);
+    });
   });
 });

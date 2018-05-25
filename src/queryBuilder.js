@@ -1,151 +1,110 @@
 import {
-  __,
   curry,
   compose,
+  map,
+  head,
+  last,
+  apply,
   equals,
   assoc,
   assocPath,
-  merge,
+  prop,
   fromPairs,
   cond,
   is,
-  identity,
-  always,
-  mergeWith,
-  concat,
-  head,
-  last,
-  toPairs,
   flatten,
-  converge,
-  juxt
+  always as K,
+  identity as I,
+  call as S
 } from 'ramda';
 
-const toArray = cond([[is(Array), identity], [always(true), Array.of]]);
+const toArray = cond([[is(Array), I], [K(true), Array.of]]);
 
-export const run = function(builder, input) {
-  return builder(input);
-};
-
-export const andThen = curry(function(firstBuilder, secondBuilder) {
-  const chainedFn = input => {
-    const firstResult = run(firstBuilder, input);
-
-    const firstAccumulatedResult = firstResult[1];
-    const secondResult = run(secondBuilder, firstAccumulatedResult);
-
-    return secondResult;
-  };
-
-  return chainedFn;
+export const run = curry((reducer, builder, accumulatedInput) => {
+  return reducer(accumulatedInput, builder());
 });
 
-export const bmap = curry(function(f, builder) {
-  return input => {
-    const result = run(builder, input);
-    const value = result[0];
-
-    const newValue = f(value);
-
-    return [newValue, result[1]];
+export const andThen = curry((reducer, builderList) => {
+  const chainedBuilder = () => {
+    const builderValues = map(S, builderList);
+    return apply(reducer, builderValues);
   };
+
+  return chainedBuilder;
 });
 
-export const fromBuilder = function(fromResource) {
-  return accumulatedValue => {
-    const newValue = assoc('from', fromResource, {});
-    const accumlatedResult = merge(accumulatedValue, newValue);
-    return [newValue, accumlatedResult];
-  };
-};
-
-export const asBuilder = function(resultAlias) {
-  return accumulatedValue => {
-    const newValue = assoc('as', resultAlias, {});
-    const accumlatedResult = merge(accumulatedValue, newValue);
-    return [newValue, accumlatedResult];
-  };
-};
-
-export const timeoutBuilder = function(timeoutValue) {
-  return accumulatedValue => {
-    const newValue = assoc('timeout', timeoutValue, {});
-    const accumlatedResult = merge(accumulatedValue, newValue);
-    return [newValue, accumlatedResult];
-  };
-};
-
-export const headerBuilder = function(headersPairs) {
-  return accumulatedValue => {
-    const newValue = compose(assoc('headers', __, {}), fromPairs)(headersPairs);
-    const accumlatedResult = merge(accumulatedValue, newValue);
-    return [newValue, accumlatedResult];
-  };
-};
-
-export const withBuilder = curry(function(paramName, paramValue) {
-  return accumulatedValue => {
-    const newValue = assocPath(['with', paramName], paramValue, {});
-    const accumlatedResult = merge(accumulatedValue, newValue);
-    return [newValue, accumlatedResult];
-  };
-});
-
-export const onlyBuilder = function(onlyItems) {
-  return accumulatedValue => {
-    const newValue = assoc('only', toArray(onlyItems), {});
-    const accumlatedResult = mergeWith(concat, accumulatedValue, newValue);
-    return [newValue, accumlatedResult];
-  };
-};
-
-export const hiddenBuilder = function() {
-  return accumulatedValue => {
-    const newValue = assoc('hidden', true, {});
-    const accumlatedResult = merge(accumulatedValue, newValue);
-    return [newValue, accumlatedResult];
-  };
-};
-
-export const ignoreErrorsBuilder = function() {
-  return accumulatedValue => {
-    const newValue = assoc('ignoreErrors', true, {});
-    const accumlatedResult = merge(accumulatedValue, newValue);
-    return [newValue, accumlatedResult];
-  };
-};
-
-export const modifiersBuilder = function(modifiersPairs) {
-  return accumulatedValue => {
-    const newValue = compose(assoc('modifiers', __, {}), fromPairs)(modifiersPairs);
-    const accumlatedResult = merge(accumulatedValue, newValue);
-    return [newValue, accumlatedResult];
-  };
-};
+const getObjOnlyKey = compose(head, Object.keys);
 
 const getApplyTargetFromBlock = function(block) {
   return cond([
-    [compose(equals('with'), head), compose(head, flatten, toPairs, last)],
-    [compose(equals('only'), head), last]
+    [compose(equals('with'), getObjOnlyKey), compose(getObjOnlyKey, prop('with'))],
+    [compose(equals('only'), getObjOnlyKey), last]
   ])(block);
 };
 
-export const applyBuilder = function(applyFunctionName, builder) {
-  return accumulatedValue => {
-    const applyOperator = bmap(value => {
-      const block = compose(head, toPairs)(value);
-      const blockKey = head(block);
-      const applyTarget = getApplyTargetFromBlock(block);
+function createApplyBlock(operator, blocks) {
+  const lastBlock = last(blocks);
+  const blockKey = getObjOnlyKey(lastBlock);
+  const applyTarget = getApplyTargetFromBlock(lastBlock);
 
-      return {
-        apply: {
-          [blockKey]: {
-            [applyTarget]: applyFunctionName
-          }
-        }
-      };
-    }, builder);
+  return {
+    apply: {
+      [blockKey]: {
+        [applyTarget]: operator
+      }
+    }
+  };
+}
 
-    return compose(juxt([head, converge(merge, [last, head])]), applyOperator)(accumulatedValue);
+export const applyOperator = curry((reducer, builder, operator) => {
+  const newBuilder = () => {
+    const previousValue = builder();
+    const applyed = createApplyBlock(operator, previousValue);
+    return reducer(previousValue, applyed);
+  };
+  return newBuilder;
+});
+
+export const createFromBlock = function(fromResource) {
+  return K(assoc('from', fromResource, {}));
+};
+
+export const createAsBlock = function(resourceAlias) {
+  return K(assoc('as', resourceAlias, {}));
+};
+
+export const createTimeoutBlock = function(timeoutValue) {
+  return K(assoc('timeout', timeoutValue, {}));
+};
+
+export const createHeaderBlock = function(headers) {
+  const headerObj = fromPairs(headers);
+  return K(assoc('headers', headerObj, {}));
+};
+
+export const createWithBlock = curry(function(paramName, paramValue) {
+  return K(assocPath(['with', paramName], paramValue, {}));
+});
+
+export const createOnlyBlock = function(filters) {
+  return K(assoc('only', filters, {}));
+};
+
+export const createHiddenBlock = function(shouldBeHidden) {
+  return K(assoc('hidden', shouldBeHidden, {}));
+};
+
+export const createIgnoreErrorsBlock = function(shouldIgnoreErrors) {
+  return K(assoc('ignoreErrors', shouldIgnoreErrors, {}));
+};
+
+export const createModifiersBlock = function(modifiers) {
+  const modifiersObj = fromPairs(modifiers);
+  return K(assoc('modifiers', modifiersObj, {}));
+};
+
+export const queryBuilder = input => {
+  return {
+    from: andThen(compose(flatten, Array.of), [input])
   };
 };

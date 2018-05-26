@@ -1,10 +1,8 @@
 import {
   curry,
   compose,
-  map,
   head,
   last,
-  apply,
   equals,
   assoc,
   assocPath,
@@ -14,24 +12,12 @@ import {
   is,
   flatten,
   always as K,
-  identity as I,
-  call as S
+  identity as I
 } from 'ramda';
 
+import { andThen } from './builder';
+
 const toArray = cond([[is(Array), I], [K(true), Array.of]]);
-
-export const run = curry((reducer, builder, accumulatedInput) => {
-  return reducer(accumulatedInput, builder());
-});
-
-export const andThen = curry((reducer, builderList) => {
-  const chainedBuilder = () => {
-    const builderValues = map(S, builderList);
-    return apply(reducer, builderValues);
-  };
-
-  return chainedBuilder;
-});
 
 const getObjOnlyKey = compose(head, Object.keys);
 

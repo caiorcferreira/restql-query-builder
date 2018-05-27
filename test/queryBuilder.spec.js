@@ -34,8 +34,8 @@ describe('Query Builder', () => {
       });
     });
 
-    it('should accept an empty object as initial query', () => {
-      const heroQuery = queryBuilder({})
+    it('should accept an empty object as initial query as default', () => {
+      const heroQuery = queryBuilder()
         .from('heroes')
         .as('hero');
 
@@ -43,6 +43,14 @@ describe('Query Builder', () => {
         from: 'heroes',
         as: 'hero'
       });
+    });
+
+    it('should get the string form of the query', () => {
+      const heroQuery = queryBuilder()
+        .from('heroes')
+        .as('hero');
+
+      expect(heroQuery.toString()).toBe('from heroes as hero');
     });
 
     it('should get a chainable query builder for the given initial builder', () => {
@@ -61,25 +69,41 @@ describe('Query Builder', () => {
         hidden: expect.any(Function),
         ignoreErrors: expect.any(Function),
         apply: expect.any(Function),
-        toObject: expect.any(Function)
+        toObject: expect.any(Function),
+        toString: expect.any(Function)
       });
     });
   });
 
-  it('should get a new builder with the apply operator added', () => {
-    const fromBlock = createFromBlock('heroes');
-    const asBlock = createAsBlock('hero');
-    const withBlock = createWithBlock('weapons', ['sword', 'shield']);
+  describe('Apply combinator', () => {
+    it('should get a new builder with the apply operator targeting a with block', () => {
+      const fromBlock = createFromBlock('heroes');
+      const asBlock = createAsBlock('hero');
+      const withBlock = createWithBlock('weapons', ['sword', 'shield']);
 
-    const initialBuilder = andThen(Array.of, fromBlock, asBlock, withBlock);
-    const query = applyOperator(compose(flatten, Array.of), initialBuilder, 'flatten');
+      const initialBuilder = andThen(Array.of, fromBlock, asBlock, withBlock);
+      const query = applyOperator(compose(flatten, Array.of), initialBuilder, 'flatten');
 
-    expect(query()).toEqual([
-      { from: 'heroes' },
-      { as: 'hero' },
-      { with: { weapons: ['sword', 'shield'] } },
-      { apply: { with: { weapons: 'flatten' } } }
-    ]);
+      expect(query()).toEqual([
+        { from: 'heroes' },
+        { as: 'hero' },
+        { with: { weapons: ['sword', 'shield'] } },
+        { apply: { with: { weapons: 'flatten' } } }
+      ]);
+    });
+
+    it('should get a new builder with the apply operator targeting an only block', () => {
+      const heroQuery = queryBuilder()
+        .from('heroes')
+        .as('hero')
+        .only('name')
+        .apply('matches("^Super")')
+        .only(['weapons', 'stats']);
+
+      expect(heroQuery.toString()).toEqual(
+        'from heroes as hero\nonly name -> matches("^Super"), weapons, stats'
+      );
+    });
   });
 
   describe('Block creators', () => {
@@ -123,11 +147,9 @@ describe('Query Builder', () => {
     });
 
     it('should create only block', () => {
-      const onlyFilter = ['name', 'stats'];
+      const onlyBlock = createOnlyBlock('name');
 
-      const onlyBlock = createOnlyBlock(onlyFilter);
-
-      expect(onlyBlock()).toEqual({ only: ['name', 'stats'] });
+      expect(onlyBlock()).toEqual({ only: ['name'] });
     });
 
     it('should create hidden block', () => {

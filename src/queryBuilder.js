@@ -10,23 +10,24 @@ import {
   prop,
   fromPairs,
   cond,
-  is,
   flatten,
-  mergeAll,
-  always as K,
-  identity as I
+  concat,
+  reduce,
+  mergeWithKey,
+  is,
+  identity as I,
+  always as K
 } from 'ramda';
 
-import { run, andThen } from './builder';
-
-const toArray = cond([[is(Array), I], [K(true), Array.of]]);
+import { run, andThen, toBuilder } from './builder';
+import stringify from './stringify';
 
 const getObjOnlyKey = compose(head, Object.keys);
 
 const getApplyTargetFromBlock = function(block) {
   return cond([
     [compose(equals('with'), getObjOnlyKey), compose(getObjOnlyKey, prop('with'))],
-    [compose(equals('only'), getObjOnlyKey), last]
+    [compose(equals('only'), getObjOnlyKey), compose(last, prop('only'))]
   ])(block);
 };
 
@@ -74,8 +75,10 @@ export const createWithBlock = curry(function(paramName, paramValue) {
   return K(assocPath(['with', paramName], paramValue, {}));
 });
 
+const toArray = cond([[is(Array), I], [K(true), Array.of]]);
+
 export const createOnlyBlock = function(filters) {
-  return K(assoc('only', filters, {}));
+  return K(assoc('only', toArray(filters), {}));
 };
 
 export const createHiddenBlock = function(shouldBeHidden) {
@@ -91,17 +94,17 @@ export const createModifiersBlock = function(modifiers) {
   return K(assoc('modifiers', modifiersObj, {}));
 };
 
-const chainBuilders = partial(andThen, [compose(flatten, Array.of)]);
+const chainQueryBuilders = partial(andThen, [compose(flatten, Array.of)]);
 
-const builderReducer = (accumulatedInput, builderResult) => {
-  return mergeAll([accumulatedInput, ...builderResult]);
+const mergeQueries = (k, l, r) => (k === 'only' ? concat(l, r) : r);
+
+const queryBuilderReducer = (accumulatedInput, builderResult) => {
+  return reduce(mergeWithKey(mergeQueries), {}, [accumulatedInput, ...builderResult]);
 };
 
-const toBuilder = cond([[is(Function), I], [K(true), K]]);
-
-export const queryBuilder = input => {
+export const queryBuilder = (input = {}) => {
   const inputBuilder = toBuilder(input);
-  const chainWithInput = builder => chainBuilders(inputBuilder, builder);
+  const chainWithInput = builder => chainQueryBuilders(inputBuilder, builder);
 
   return {
     use: compose(chainWithInput, createModifiersBlock),
@@ -114,6 +117,7 @@ export const queryBuilder = input => {
     hidden: compose(queryBuilder, chainWithInput, createHiddenBlock),
     ignoreErrors: compose(queryBuilder, chainWithInput, createIgnoreErrorsBlock),
     apply: compose(queryBuilder, partial(applyOperator, [compose(flatten, Array.of), input])),
-    toObject: () => run(builderReducer, input, {})
+    toObject: () => run(queryBuilderReducer, input, {}),
+    toString: () => stringify(run(queryBuilderReducer, input, {}))
   };
 };

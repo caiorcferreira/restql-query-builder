@@ -2,7 +2,19 @@ import { compose, flatten } from 'ramda';
 
 import { andThen } from '../src/builder';
 import { createFromBlock, createAsBlock, createWithBlock } from '../src/blockCreators';
-import { queryBuilder, from, as, toObject, applyOperator } from '../src/queryBuilder';
+import {
+  applyOperator,
+  queryBuilder,
+  use,
+  from,
+  as,
+  timeout,
+  headers,
+  withClause,
+  only,
+  hidden,
+  toObject
+} from '../src/queryBuilder';
 
 describe('Query Builder', () => {
   describe('Apply combinator', () => {
@@ -96,13 +108,46 @@ describe('Query Builder', () => {
   });
 
   describe('Composable Way', () => {
-    it('should get the object form of a query', () => {
+    it('should get the object form of a query with from and as blocks', () => {
       const query = compose(toObject, as('hero'), from('heroes'))({});
-
       expect(query).toEqual({
         from: 'heroes',
         as: 'hero'
       });
+    });
+
+    it('should get the object form of a query with timeout block ', () => {
+      const query = compose(toObject, timeout(200), as('hero'), from('heroes'))({});
+      expect(query).toEqual({ from: 'heroes', as: 'hero', timeout: 200 });
+    });
+
+    it('should get the object form of a query with modifiers block', () => {
+      const query = compose(toObject, use([['use-cache', 600]]), from('heroes'))({});
+      expect(query).toEqual({ modifiers: { 'use-cache': 600 }, from: 'heroes' });
+    });
+
+    it('should get the object form of a query with header block', () => {
+      const query = compose(
+        toObject,
+        headers([['Content-Type', 'application/json']]),
+        from('heroes')
+      )({});
+      expect(query).toEqual({ from: 'heroes', headers: { 'Content-Type': 'application/json' } });
+    });
+
+    it('should get the object form of a query with with block', () => {
+      const query = compose(toObject, withClause('name', 'Link'), from('heroes'))({});
+      expect(query).toEqual({ from: 'heroes', with: { name: 'Link' } });
+    });
+
+    it('should get the object form of a query with only block', () => {
+      const query = compose(toObject, only(['name', 'weapons']), from('heroes'))({});
+      expect(query).toEqual({ from: 'heroes', only: ['name', 'weapons'] });
+    });
+
+    it('should get the object form of a query with hidden block', () => {
+      const query = compose(toObject, hidden(true), from('heroes'))({});
+      expect(query).toEqual({ from: 'heroes', hidden: true });
     });
   });
 });

@@ -10,6 +10,10 @@ import {
   flatten,
   concat,
   reduce,
+  length,
+  apply,
+  append,
+  always as K,
   merge,
   mergeWithKey
 } from 'ramda';
@@ -94,14 +98,47 @@ export const queryBuilder = (input = {}) => {
 };
 
 // Pointless style builders
-export const from = curry((resourceName, input) => {
+const pointlessBuilder = curry((builder, input) => {
   const inputBuilder = toBuilder(input);
-  return chainQueryBuilders(inputBuilder, createFromBlock(resourceName));
+  return chainQueryBuilders(inputBuilder, builder);
 });
 
-export const as = curry((resourceAlias, input) => {
-  const inputBuilder = toBuilder(input);
-  return chainQueryBuilders(inputBuilder, createAsBlock(resourceAlias));
+export const use = curry((modifiers, input) =>
+  pointlessBuilder(createModifiersBlock(modifiers), input)
+);
+
+export const from = curry((resourceName, input) =>
+  pointlessBuilder(createFromBlock(resourceName), input)
+);
+
+export const as = curry((resourceAlias, input) =>
+  pointlessBuilder(createAsBlock(resourceAlias), input)
+);
+
+export const timeout = curry((timeoutValue, input) =>
+  pointlessBuilder(createTimeoutBlock(timeoutValue), input)
+);
+
+export const headers = curry((headers, input) =>
+  pointlessBuilder(createHeaderBlock(headers), input)
+);
+
+export const withClause = curry((paramName, paramValue, input) =>
+  pointlessBuilder(createWithBlock(paramName, paramValue), input)
+);
+
+export const only = curry((filters, input) => pointlessBuilder(createOnlyBlock(filters), input));
+
+const hiddenClause = curry((shouldBeHidden, input) => {
+  return pointlessBuilder(createHiddenBlock(shouldBeHidden), input);
 });
+
+export const hidden = (...args) => {
+  return cond([
+    [compose(equals(0), length), partial(hiddenClause, [true])],
+    [compose(equals(1), length), partial(hiddenClause)],
+    [K(true), apply(hiddenClause)]
+  ])(args);
+};
 
 export const toObject = runBuilder;

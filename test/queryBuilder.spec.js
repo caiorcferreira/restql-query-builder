@@ -11,13 +11,14 @@ describe('Query Builder', () => {
 
       const heroQuery = queryBuilder(fromBlock)
         .as('hero')
+        .with('name', 'Link')
         .with('weapons', ['sword', 'shield'])
         .apply('flatten');
 
       expect(heroQuery.toObject()).toEqual({
         from: 'heroes',
         as: 'hero',
-        with: { weapons: ['sword', 'shield'] },
+        with: { weapons: ['sword', 'shield'], name: 'Link' },
         apply: { with: { weapons: 'flatten' } }
       });
     });

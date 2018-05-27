@@ -10,6 +10,7 @@ import {
   flatten,
   concat,
   reduce,
+  merge,
   mergeWithKey
 } from 'ramda';
 
@@ -62,7 +63,8 @@ export const applyOperator = curry((reducer, builder, operator) => {
 
 const chainQueryBuilders = partial(andThen, [compose(flatten, Array.of)]);
 
-const mergeQueries = (key, left, right) => (key === 'only' ? concat(left, right) : right);
+const mergeQueries = (key, left, right) =>
+  key === 'only' ? concat(left, right) : merge(left, right);
 
 const queryBuilderReducer = (accumulatedInput, builderResult) => {
   return reduce(mergeWithKey(mergeQueries), {}, [accumulatedInput, ...builderResult]);

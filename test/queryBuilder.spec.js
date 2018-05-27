@@ -3,6 +3,7 @@ import { compose, flatten } from 'ramda';
 import { andThen } from '../src/builder';
 
 import {
+  queryBuilder,
   createFromBlock,
   createAsBlock,
   createTimeoutBlock,
@@ -16,6 +17,55 @@ import {
 } from '../src/queryBuilder';
 
 describe('Query Builder', () => {
+  describe('Chainable Way', () => {
+    it('should create a simple query object to target a resource with an alias', () => {
+      const fromBlock = createFromBlock('heroes');
+
+      const heroQuery = queryBuilder(fromBlock)
+        .as('hero')
+        .with('weapons', ['sword', 'shield'])
+        .apply('flatten');
+
+      expect(heroQuery.toObject()).toEqual({
+        from: 'heroes',
+        as: 'hero',
+        with: { weapons: ['sword', 'shield'] },
+        apply: { with: { weapons: 'flatten' } }
+      });
+    });
+
+    it('should accept an empty object as initial query', () => {
+      const heroQuery = queryBuilder({})
+        .from('heroes')
+        .as('hero');
+
+      expect(heroQuery.toObject()).toEqual({
+        from: 'heroes',
+        as: 'hero'
+      });
+    });
+
+    it('should get a chainable query builder for the given initial builder', () => {
+      const initialBuilder = createFromBlock('heroes');
+
+      const query = queryBuilder(initialBuilder);
+
+      expect(query).toEqual({
+        use: expect.any(Function),
+        from: expect.any(Function),
+        as: expect.any(Function),
+        timeout: expect.any(Function),
+        headers: expect.any(Function),
+        with: expect.any(Function),
+        only: expect.any(Function),
+        hidden: expect.any(Function),
+        ignoreErrors: expect.any(Function),
+        apply: expect.any(Function),
+        toObject: expect.any(Function)
+      });
+    });
+  });
+
   it('should get a new builder with the apply operator added', () => {
     const fromBlock = createFromBlock('heroes');
     const asBlock = createAsBlock('hero');

@@ -1,6 +1,7 @@
 import {
   curry,
   compose,
+  partial,
   head,
   last,
   equals,
@@ -11,11 +12,12 @@ import {
   cond,
   is,
   flatten,
+  mergeAll,
   always as K,
   identity as I
 } from 'ramda';
 
-import { andThen } from './builder';
+import { run, andThen } from './builder';
 
 const toArray = cond([[is(Array), I], [K(true), Array.of]]);
 
@@ -89,8 +91,29 @@ export const createModifiersBlock = function(modifiers) {
   return K(assoc('modifiers', modifiersObj, {}));
 };
 
+const chainBuilders = partial(andThen, [compose(flatten, Array.of)]);
+
+const builderReducer = (accumulatedInput, builderResult) => {
+  return mergeAll([accumulatedInput, ...builderResult]);
+};
+
+const toBuilder = cond([[is(Function), I], [K(true), K]]);
+
 export const queryBuilder = input => {
+  const inputBuilder = toBuilder(input);
+  const chainWithInput = builder => chainBuilders(inputBuilder, builder);
+
   return {
-    from: andThen(compose(flatten, Array.of), [input])
+    use: compose(chainWithInput, createModifiersBlock),
+    from: compose(queryBuilder, chainWithInput, createFromBlock),
+    as: compose(queryBuilder, chainWithInput, createAsBlock),
+    timeout: compose(queryBuilder, chainWithInput, createTimeoutBlock),
+    headers: compose(queryBuilder, chainWithInput, createHeaderBlock),
+    with: compose(queryBuilder, chainWithInput, createWithBlock),
+    only: compose(queryBuilder, chainWithInput, createOnlyBlock),
+    hidden: compose(queryBuilder, chainWithInput, createHiddenBlock),
+    ignoreErrors: compose(queryBuilder, chainWithInput, createIgnoreErrorsBlock),
+    apply: compose(queryBuilder, partial(applyOperator, [compose(flatten, Array.of), input])),
+    toObject: () => run(builderReducer, input, {})
   };
 };

@@ -2,9 +2,40 @@ import { compose, flatten } from 'ramda';
 
 import { andThen } from '../src/builder';
 import { createFromBlock, createAsBlock, createWithBlock } from '../src/blockCreators';
-import { queryBuilder, applyOperator } from '../src/queryBuilder';
+import { queryBuilder, from, as, toObject, applyOperator } from '../src/queryBuilder';
 
 describe('Query Builder', () => {
+  describe('Apply combinator', () => {
+    it('should get a new builder with the apply operator targeting a with block', () => {
+      const fromBlock = createFromBlock('heroes');
+      const asBlock = createAsBlock('hero');
+      const withBlock = createWithBlock('weapons', ['sword', 'shield']);
+
+      const initialBuilder = andThen(Array.of, fromBlock, asBlock, withBlock);
+      const query = applyOperator(compose(flatten, Array.of), initialBuilder, 'flatten');
+
+      expect(query()).toEqual([
+        { from: 'heroes' },
+        { as: 'hero' },
+        { with: { weapons: ['sword', 'shield'] } },
+        { apply: { with: { weapons: 'flatten' } } }
+      ]);
+    });
+
+    it('should get a new builder with the apply operator targeting an only block', () => {
+      const heroQuery = queryBuilder()
+        .from('heroes')
+        .as('hero')
+        .only('name')
+        .apply('matches("^Super")')
+        .only(['weapons', 'stats']);
+
+      expect(heroQuery.toString()).toEqual(
+        'from heroes as hero\nonly name -> matches("^Super"), weapons, stats'
+      );
+    });
+  });
+
   describe('Chainable Way', () => {
     it('should create a simple query object to target a resource with an alias', () => {
       const fromBlock = createFromBlock('heroes');
@@ -64,34 +95,14 @@ describe('Query Builder', () => {
     });
   });
 
-  describe('Apply combinator', () => {
-    it('should get a new builder with the apply operator targeting a with block', () => {
-      const fromBlock = createFromBlock('heroes');
-      const asBlock = createAsBlock('hero');
-      const withBlock = createWithBlock('weapons', ['sword', 'shield']);
+  describe('Composable Way', () => {
+    it('should get the object form of a query', () => {
+      const query = compose(toObject, as('hero'), from('heroes'))({});
 
-      const initialBuilder = andThen(Array.of, fromBlock, asBlock, withBlock);
-      const query = applyOperator(compose(flatten, Array.of), initialBuilder, 'flatten');
-
-      expect(query()).toEqual([
-        { from: 'heroes' },
-        { as: 'hero' },
-        { with: { weapons: ['sword', 'shield'] } },
-        { apply: { with: { weapons: 'flatten' } } }
-      ]);
-    });
-
-    it('should get a new builder with the apply operator targeting an only block', () => {
-      const heroQuery = queryBuilder()
-        .from('heroes')
-        .as('hero')
-        .only('name')
-        .apply('matches("^Super")')
-        .only(['weapons', 'stats']);
-
-      expect(heroQuery.toString()).toEqual(
-        'from heroes as hero\nonly name -> matches("^Super"), weapons, stats'
-      );
+      expect(query).toEqual({
+        from: 'heroes',
+        as: 'hero'
+      });
     });
   });
 });

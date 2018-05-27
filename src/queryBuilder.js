@@ -70,6 +70,9 @@ const queryBuilderReducer = (accumulatedInput, builderResult) => {
   return reduce(mergeWithKey(mergeQueries), {}, [accumulatedInput, ...builderResult]);
 };
 
+const runBuilder = builder => run(queryBuilderReducer, builder, {});
+
+// Chainable builders
 export const queryBuilder = (input = {}) => {
   const inputBuilder = toBuilder(input);
   const chainWithInput = builder => chainQueryBuilders(inputBuilder, builder);
@@ -85,7 +88,20 @@ export const queryBuilder = (input = {}) => {
     hidden: compose(queryBuilder, chainWithInput, createHiddenBlock),
     ignoreErrors: compose(queryBuilder, chainWithInput, createIgnoreErrorsBlock),
     apply: compose(queryBuilder, partial(applyOperator, [compose(flatten, Array.of), input])),
-    toObject: () => run(queryBuilderReducer, input, {}),
-    toString: () => stringify(run(queryBuilderReducer, input, {}))
+    toObject: () => runBuilder(input),
+    toString: () => stringify(runBuilder(input))
   };
 };
+
+// Pointless style builders
+export const from = curry((resourceName, input) => {
+  const inputBuilder = toBuilder(input);
+  return chainQueryBuilders(inputBuilder, createFromBlock(resourceName));
+});
+
+export const as = curry((resourceAlias, input) => {
+  const inputBuilder = toBuilder(input);
+  return chainQueryBuilders(inputBuilder, createAsBlock(resourceAlias));
+});
+
+export const toObject = runBuilder;

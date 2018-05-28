@@ -1,4 +1,4 @@
-import { compose, flatten } from 'ramda';
+import { compose, flatten, tap } from 'ramda';
 
 import { andThen } from '../src/builder';
 import { createFromBlock, createAsBlock, createWithBlock } from '../src/blockCreators';
@@ -13,6 +13,8 @@ import {
   withClause,
   only,
   hidden,
+  ignoreErrors,
+  ignoreErrorsClause,
   toObject
 } from '../src/queryBuilder';
 
@@ -148,6 +150,17 @@ describe('Query Builder', () => {
     it('should get the object form of a query with hidden block', () => {
       const query = compose(toObject, hidden(true), from('heroes'))({});
       expect(query).toEqual({ from: 'heroes', hidden: true });
+    });
+
+    it('should get the object form of a query with ignore erros block', () => {
+      const query = compose(toObject, ignoreErrors(), as('hero'), from('heroes'))({});
+      expect(query).toEqual({ from: 'heroes', as: 'hero', ignoreErrors: true });
+
+      const query2 = compose(toObject, ignoreErrors(false), as('hero'), from('heroes'))({});
+      expect(query2).toEqual({ from: 'heroes', as: 'hero', ignoreErrors: false });
+
+      const query3 = ignoreErrors(true, from('heroes', {}));
+      expect(toObject(query3)).toEqual({ from: 'heroes', ignoreErrors: true });
     });
   });
 });

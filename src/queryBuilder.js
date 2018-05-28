@@ -135,9 +135,21 @@ const hiddenClause = curry((shouldBeHidden, input) => {
 
 export const hidden = (...args) => {
   return cond([
-    [compose(equals(0), length), partial(hiddenClause, [true])],
+    [compose(equals(0), length), K(hiddenClause(true))],
     [compose(equals(1), length), partial(hiddenClause)],
     [K(true), apply(hiddenClause)]
+  ])(args);
+};
+
+export const ignoreErrorsClause = curry((shouldIgnore, input) => {
+  return pointlessBuilder(createIgnoreErrorsBlock(shouldIgnore), input);
+});
+
+export const ignoreErrors = (...args) => {
+  return cond([
+    [compose(equals(0), length), K(ignoreErrorsClause(true))],
+    [compose(equals(1), length), partial(ignoreErrorsClause)],
+    [K(true), apply(ignoreErrorsClause)]
   ])(args);
 };
 

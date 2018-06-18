@@ -1,4 +1,4 @@
-import { compose, flatten, tap } from 'ramda';
+import { compose, flatten } from 'ramda';
 
 import { andThen } from '../src/builder';
 import { createFromBlock, createAsBlock, createWithBlock } from '../src/blockCreators';
@@ -14,7 +14,6 @@ import {
   only,
   hidden,
   ignoreErrors,
-  ignoreErrorsClause,
   toObject
 } from '../src/queryBuilder';
 
@@ -26,7 +25,14 @@ describe('Query Builder', () => {
       const withBlock = createWithBlock('weapons', ['sword', 'shield']);
 
       const initialBuilder = andThen(Array.of, fromBlock, asBlock, withBlock);
-      const query = applyOperator(compose(flatten, Array.of), initialBuilder, 'flatten');
+      const query = applyOperator(
+        compose(
+          flatten,
+          Array.of
+        ),
+        initialBuilder,
+        'flatten'
+      );
 
       expect(query()).toEqual([
         { from: 'heroes' },
@@ -50,7 +56,7 @@ describe('Query Builder', () => {
     });
   });
 
-  describe('Chainable Way', () => {
+  describe('Chainable Style', () => {
     it('should create a simple query object to target a resource with an alias', () => {
       const fromBlock = createFromBlock('heroes');
 
@@ -109,9 +115,13 @@ describe('Query Builder', () => {
     });
   });
 
-  describe('Composable Way', () => {
+  describe('Pointless Style', () => {
     it('should get the object form of a query with from and as blocks', () => {
-      const query = compose(toObject, as('hero'), from('heroes'))({});
+      const query = compose(
+        toObject,
+        as('hero'),
+        from('heroes')
+      )({});
       expect(query).toEqual({
         from: 'heroes',
         as: 'hero'
@@ -119,12 +129,21 @@ describe('Query Builder', () => {
     });
 
     it('should get the object form of a query with timeout block ', () => {
-      const query = compose(toObject, timeout(200), as('hero'), from('heroes'))({});
+      const query = compose(
+        toObject,
+        timeout(200),
+        as('hero'),
+        from('heroes')
+      )({});
       expect(query).toEqual({ from: 'heroes', as: 'hero', timeout: 200 });
     });
 
     it('should get the object form of a query with modifiers block', () => {
-      const query = compose(toObject, use([['use-cache', 600]]), from('heroes'))({});
+      const query = compose(
+        toObject,
+        use([['use-cache', 600]]),
+        from('heroes')
+      )({});
       expect(query).toEqual({ modifiers: { 'use-cache': 600 }, from: 'heroes' });
     });
 
@@ -138,25 +157,47 @@ describe('Query Builder', () => {
     });
 
     it('should get the object form of a query with with block', () => {
-      const query = compose(toObject, withClause('name', 'Link'), from('heroes'))({});
+      const query = compose(
+        toObject,
+        withClause('name', 'Link'),
+        from('heroes')
+      )({});
       expect(query).toEqual({ from: 'heroes', with: { name: 'Link' } });
     });
 
     it('should get the object form of a query with only block', () => {
-      const query = compose(toObject, only(['name', 'weapons']), from('heroes'))({});
+      const query = compose(
+        toObject,
+        only(['name', 'weapons']),
+        from('heroes')
+      )({});
       expect(query).toEqual({ from: 'heroes', only: ['name', 'weapons'] });
     });
 
     it('should get the object form of a query with hidden block', () => {
-      const query = compose(toObject, hidden(true), from('heroes'))({});
+      const query = compose(
+        toObject,
+        hidden(true),
+        from('heroes')
+      )({});
       expect(query).toEqual({ from: 'heroes', hidden: true });
     });
 
     it('should get the object form of a query with ignore erros block', () => {
-      const query = compose(toObject, ignoreErrors(), as('hero'), from('heroes'))({});
+      const query = compose(
+        toObject,
+        ignoreErrors(),
+        as('hero'),
+        from('heroes')
+      )({});
       expect(query).toEqual({ from: 'heroes', as: 'hero', ignoreErrors: true });
 
-      const query2 = compose(toObject, ignoreErrors(false), as('hero'), from('heroes'))({});
+      const query2 = compose(
+        toObject,
+        ignoreErrors(false),
+        as('hero'),
+        from('heroes')
+      )({});
       expect(query2).toEqual({ from: 'heroes', as: 'hero', ignoreErrors: false });
 
       const query3 = ignoreErrors(true, from('heroes', {}));

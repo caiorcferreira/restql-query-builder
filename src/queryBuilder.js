@@ -12,7 +12,6 @@ import {
   reduce,
   length,
   apply,
-  append,
   always as K,
   merge,
   mergeWithKey
@@ -33,12 +32,33 @@ import {
 import { run, andThen, toBuilder } from './builder';
 import stringify from './stringify';
 
-const getObjOnlyKey = compose(head, Object.keys);
+const getObjOnlyKey = compose(
+  head,
+  Object.keys
+);
 
 const getApplyTargetFromBlock = function(block) {
   return cond([
-    [compose(equals('with'), getObjOnlyKey), compose(getObjOnlyKey, prop('with'))],
-    [compose(equals('only'), getObjOnlyKey), compose(last, prop('only'))]
+    [
+      compose(
+        equals('with'),
+        getObjOnlyKey
+      ),
+      compose(
+        getObjOnlyKey,
+        prop('with')
+      )
+    ],
+    [
+      compose(
+        equals('only'),
+        getObjOnlyKey
+      ),
+      compose(
+        last,
+        prop('only')
+      )
+    ]
   ])(block);
 };
 
@@ -65,7 +85,12 @@ export const applyOperator = curry((reducer, builder, operator) => {
   return newBuilder;
 });
 
-const chainQueryBuilders = partial(andThen, [compose(flatten, Array.of)]);
+const chainQueryBuilders = partial(andThen, [
+  compose(
+    flatten,
+    Array.of
+  )
+]);
 
 const mergeQueries = (key, left, right) =>
   key === 'only' ? concat(left, right) : merge(left, right);
@@ -82,16 +107,60 @@ export const queryBuilder = (input = {}) => {
   const chainWithInput = builder => chainQueryBuilders(inputBuilder, builder);
 
   return {
-    use: compose(chainWithInput, createModifiersBlock),
-    from: compose(queryBuilder, chainWithInput, createFromBlock),
-    as: compose(queryBuilder, chainWithInput, createAsBlock),
-    timeout: compose(queryBuilder, chainWithInput, createTimeoutBlock),
-    headers: compose(queryBuilder, chainWithInput, createHeaderBlock),
-    with: compose(queryBuilder, chainWithInput, createWithBlock),
-    only: compose(queryBuilder, chainWithInput, createOnlyBlock),
-    hidden: compose(queryBuilder, chainWithInput, createHiddenBlock),
-    ignoreErrors: compose(queryBuilder, chainWithInput, createIgnoreErrorsBlock),
-    apply: compose(queryBuilder, partial(applyOperator, [compose(flatten, Array.of), input])),
+    use: compose(
+      chainWithInput,
+      createModifiersBlock
+    ),
+    from: compose(
+      queryBuilder,
+      chainWithInput,
+      createFromBlock
+    ),
+    as: compose(
+      queryBuilder,
+      chainWithInput,
+      createAsBlock
+    ),
+    timeout: compose(
+      queryBuilder,
+      chainWithInput,
+      createTimeoutBlock
+    ),
+    headers: compose(
+      queryBuilder,
+      chainWithInput,
+      createHeaderBlock
+    ),
+    with: compose(
+      queryBuilder,
+      chainWithInput,
+      createWithBlock
+    ),
+    only: compose(
+      queryBuilder,
+      chainWithInput,
+      createOnlyBlock
+    ),
+    hidden: compose(
+      queryBuilder,
+      chainWithInput,
+      createHiddenBlock
+    ),
+    ignoreErrors: compose(
+      queryBuilder,
+      chainWithInput,
+      createIgnoreErrorsBlock
+    ),
+    apply: compose(
+      queryBuilder,
+      partial(applyOperator, [
+        compose(
+          flatten,
+          Array.of
+        ),
+        input
+      ])
+    ),
     toObject: () => runBuilder(input),
     toString: () => stringify(runBuilder(input))
   };
@@ -135,8 +204,20 @@ const hiddenClause = curry((shouldBeHidden, input) => {
 
 export const hidden = (...args) => {
   return cond([
-    [compose(equals(0), length), K(hiddenClause(true))],
-    [compose(equals(1), length), partial(hiddenClause)],
+    [
+      compose(
+        equals(0),
+        length
+      ),
+      K(hiddenClause(true))
+    ],
+    [
+      compose(
+        equals(1),
+        length
+      ),
+      partial(hiddenClause)
+    ],
     [K(true), apply(hiddenClause)]
   ])(args);
 };
@@ -147,8 +228,20 @@ export const ignoreErrorsClause = curry((shouldIgnore, input) => {
 
 export const ignoreErrors = (...args) => {
   return cond([
-    [compose(equals(0), length), K(ignoreErrorsClause(true))],
-    [compose(equals(1), length), partial(ignoreErrorsClause)],
+    [
+      compose(
+        equals(0),
+        length
+      ),
+      K(ignoreErrorsClause(true))
+    ],
+    [
+      compose(
+        equals(1),
+        length
+      ),
+      partial(ignoreErrorsClause)
+    ],
     [K(true), apply(ignoreErrorsClause)]
   ])(args);
 };

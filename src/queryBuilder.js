@@ -18,6 +18,8 @@ import {
   mergeWithKey
 } from 'ramda';
 
+import multimethod from './multimethod';
+
 import {
   createFromBlock,
   createAsBlock,
@@ -180,18 +182,10 @@ export const use = curry((modifiers, input) =>
 export const fromClause = (resourceName, input = {}) =>
   pointlessBuilder(createFromBlock(resourceName), input);
 
-export const from = (...args) => {
-  return cond([
-    [
-      compose(
-        equals(1),
-        length
-      ),
-      partial(fromClause)
-    ],
-    [K(true), apply(fromClause)]
-  ])(args);
-};
+export const from = multimethod({
+  1: partial(fromClause),
+  n: apply(fromClause)
+});
 
 export const as = curry((resourceAlias, input) =>
   pointlessBuilder(createAsBlock(resourceAlias), input)
@@ -215,49 +209,21 @@ const hiddenClause = curry((shouldBeHidden, input) => {
   return pointlessBuilder(createHiddenBlock(shouldBeHidden), input);
 });
 
-export const hidden = (...args) => {
-  return cond([
-    [
-      compose(
-        equals(0),
-        length
-      ),
-      K(hiddenClause(true))
-    ],
-    [
-      compose(
-        equals(1),
-        length
-      ),
-      partial(hiddenClause)
-    ],
-    [K(true), apply(hiddenClause)]
-  ])(args);
-};
+export const hidden = multimethod({
+  0: K(hiddenClause(true)),
+  1: partial(hiddenClause),
+  n: apply(hiddenClause)
+});
 
 export const ignoreErrorsClause = curry((shouldIgnore, input) => {
   return pointlessBuilder(createIgnoreErrorsBlock(shouldIgnore), input);
 });
 
-export const ignoreErrors = (...args) => {
-  return cond([
-    [
-      compose(
-        equals(0),
-        length
-      ),
-      K(ignoreErrorsClause(true))
-    ],
-    [
-      compose(
-        equals(1),
-        length
-      ),
-      partial(ignoreErrorsClause)
-    ],
-    [K(true), apply(ignoreErrorsClause)]
-  ])(args);
-};
+export const ignoreErrors = multimethod({
+  0: K(ignoreErrorsClause(true)),
+  1: partial(ignoreErrorsClause),
+  n: apply(ignoreErrorsClause)
+});
 
 export const toObject = runBuilder;
 

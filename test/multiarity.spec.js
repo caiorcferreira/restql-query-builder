@@ -1,11 +1,11 @@
 import { partial, apply } from 'ramda';
-import multimethod from '../src/multimethod';
+import multiarity from '../src/multiarity';
 
 describe('Multimethod', () => {
   it('create a multi arity function from the object definition', () => {
     const add = (a, b) => a + b;
 
-    const multiAdd = multimethod({
+    const multiAdd = multiarity({
       1: partial(add),
       2: apply(add)
     });
@@ -18,7 +18,7 @@ describe('Multimethod', () => {
   it('create a multi arity function, with default case, from object definition', () => {
     const add = (a, b) => a + b;
 
-    const multiAdd = multimethod({
+    const multiAdd = multiarity({
       1: partial(add),
       n: apply(add)
     });

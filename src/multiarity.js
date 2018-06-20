@@ -12,8 +12,8 @@ import {
   always as K
 } from 'ramda';
 
-export default function multimethod(definition) {
-  const multiArity = compose(
+export default function multiarity(definition) {
+  const arityFns = compose(
     map(([arity, fn]) => [
       compose(
         equals(arity),
@@ -27,7 +27,7 @@ export default function multimethod(definition) {
   )(definition);
 
   const defaultCaseFn = prop('n', definition);
-  const multiFunctions = defaultCaseFn ? append([K(true), defaultCaseFn], multiArity) : multiArity;
+  const multiFunctions = defaultCaseFn ? append([K(true), defaultCaseFn], arityFns) : arityFns;
 
   return (...args) => cond(multiFunctions)(args);
 }

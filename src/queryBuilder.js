@@ -10,14 +10,13 @@ import {
   flatten,
   concat,
   reduce,
-  length,
   apply,
   always as K,
   merge,
   mergeWithKey
 } from 'ramda';
 
-import multimethod from './multimethod';
+import multiarity from './multiarity';
 
 import {
   createFromBlock,
@@ -181,7 +180,7 @@ export const use = curry((modifiers, input) =>
 export const fromClause = (resourceName, input = {}) =>
   pointlessBuilder(createFromBlock(resourceName), input);
 
-export const from = multimethod({
+export const from = multiarity({
   1: partial(fromClause),
   n: apply(fromClause)
 });
@@ -208,7 +207,7 @@ const hiddenClause = curry((shouldBeHidden, input) => {
   return pointlessBuilder(createHiddenBlock(shouldBeHidden), input);
 });
 
-export const hidden = multimethod({
+export const hidden = multiarity({
   0: K(hiddenClause(true)),
   1: partial(hiddenClause),
   n: apply(hiddenClause)
@@ -218,7 +217,7 @@ export const ignoreErrorsClause = curry((shouldIgnore, input) => {
   return pointlessBuilder(createIgnoreErrorsBlock(shouldIgnore), input);
 });
 
-export const ignoreErrors = multimethod({
+export const ignoreErrors = multiarity({
   0: K(ignoreErrorsClause(true)),
   1: partial(ignoreErrorsClause),
   n: apply(ignoreErrorsClause)

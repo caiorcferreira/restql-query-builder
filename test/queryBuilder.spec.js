@@ -2,6 +2,7 @@ import { compose, flatten } from 'ramda';
 
 import { andThen } from '../src/builder';
 import { createFromBlock, createAsBlock, createWithBlock } from '../src/blockCreators';
+
 import {
   applyOperator,
   queryBuilder,

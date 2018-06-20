@@ -14,6 +14,7 @@ import {
   only,
   hidden,
   ignoreErrors,
+  toString,
   toObject
 } from '../src/queryBuilder';
 
@@ -116,12 +117,33 @@ describe('Query Builder', () => {
   });
 
   describe('Pointless Style', () => {
+    it('should get the string of a complete query', () => {
+      const query = compose(
+        toString,
+        as('hero'),
+        from('heroes')
+      )();
+
+      expect(query).toBe('from heroes as hero');
+    });
+
+    it('should get the string of a complete query with empty input', () => {
+      const query = compose(
+        toString,
+        as('hero'),
+        from('heroes')
+      )();
+
+      expect(query).toBe('from heroes as hero');
+    });
+
     it('should get the object form of a query with from and as blocks', () => {
       const query = compose(
         toObject,
         as('hero'),
         from('heroes')
-      )({});
+      )();
+
       expect(query).toEqual({
         from: 'heroes',
         as: 'hero'
@@ -134,7 +156,7 @@ describe('Query Builder', () => {
         timeout(200),
         as('hero'),
         from('heroes')
-      )({});
+      )();
       expect(query).toEqual({ from: 'heroes', as: 'hero', timeout: 200 });
     });
 
@@ -143,7 +165,7 @@ describe('Query Builder', () => {
         toObject,
         use([['use-cache', 600]]),
         from('heroes')
-      )({});
+      )();
       expect(query).toEqual({ modifiers: { 'use-cache': 600 }, from: 'heroes' });
     });
 
@@ -152,7 +174,7 @@ describe('Query Builder', () => {
         toObject,
         headers([['Content-Type', 'application/json']]),
         from('heroes')
-      )({});
+      )();
       expect(query).toEqual({ from: 'heroes', headers: { 'Content-Type': 'application/json' } });
     });
 
@@ -161,7 +183,7 @@ describe('Query Builder', () => {
         toObject,
         withClause('name', 'Link'),
         from('heroes')
-      )({});
+      )();
       expect(query).toEqual({ from: 'heroes', with: { name: 'Link' } });
     });
 
@@ -170,7 +192,7 @@ describe('Query Builder', () => {
         toObject,
         only(['name', 'weapons']),
         from('heroes')
-      )({});
+      )();
       expect(query).toEqual({ from: 'heroes', only: ['name', 'weapons'] });
     });
 
@@ -179,7 +201,7 @@ describe('Query Builder', () => {
         toObject,
         hidden(true),
         from('heroes')
-      )({});
+      )();
       expect(query).toEqual({ from: 'heroes', hidden: true });
     });
 
@@ -189,7 +211,7 @@ describe('Query Builder', () => {
         ignoreErrors(),
         as('hero'),
         from('heroes')
-      )({});
+      )();
       expect(query).toEqual({ from: 'heroes', as: 'hero', ignoreErrors: true });
 
       const query2 = compose(
@@ -197,7 +219,7 @@ describe('Query Builder', () => {
         ignoreErrors(false),
         as('hero'),
         from('heroes')
-      )({});
+      )();
       expect(query2).toEqual({ from: 'heroes', as: 'hero', ignoreErrors: false });
 
       const query3 = ignoreErrors(true, from('heroes', {}));

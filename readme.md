@@ -242,14 +242,14 @@ const pointfreeHeroQuery = compose(toString,
 **Query an Endpoint and set modifiers**
 
 ```javascript
-// FROM heroes AS hero IGNORE-ERRORS
+// USE use=cache = 600 FROM heroes AS hero IGNORE-ERRORS
 const chainableheroQuery = queryBuilder()
                             .use([['use-cache', 600]])
                             .from('heroes')
                             .as('hero')
                             .toString();
 
-// FROM heroes AS hero IGNORE-ERRORS
+// USE use=cache = 600 FROM heroes AS hero IGNORE-ERRORS
 const pointfreeHeroQuery = compose(toString,
                                    as('hero'),
                                    from('heroes'),

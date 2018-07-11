@@ -64,8 +64,8 @@ describe('Query Builder', () => {
 
       const heroQuery = queryBuilder(fromBlock)
         .as('hero')
-        .with('name', 'Link')
-        .with('weapons', ['sword', 'shield'])
+        .withClause('name', 'Link')
+        .withClause('weapons', ['sword', 'shield'])
         .apply('flatten');
 
       expect(heroQuery.toObject()).toEqual({
@@ -106,7 +106,7 @@ describe('Query Builder', () => {
         as: expect.any(Function),
         timeout: expect.any(Function),
         headers: expect.any(Function),
-        with: expect.any(Function),
+        withClause: expect.any(Function),
         only: expect.any(Function),
         hidden: expect.any(Function),
         ignoreErrors: expect.any(Function),

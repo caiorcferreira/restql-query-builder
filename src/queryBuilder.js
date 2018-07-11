@@ -132,7 +132,7 @@ export const queryBuilder = (input = {}) => {
       chainWithInput,
       createHeaderBlock
     ),
-    with: compose(
+    withClause: compose(
       queryBuilder,
       chainWithInput,
       createWithBlock

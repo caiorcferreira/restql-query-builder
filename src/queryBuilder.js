@@ -167,18 +167,18 @@ export const queryBuilder = (input = {}) => {
   };
 };
 
-// Pointless style builders
-const pointlessBuilder = curry((builder, input) => {
+// Pointfree style builders
+const pointfreeBuilder = curry((builder, input) => {
   const inputBuilder = toBuilder(input);
   return chainQueryBuilders(inputBuilder, builder);
 });
 
 export const use = curry((modifiers, input) =>
-  pointlessBuilder(createModifiersBlock(modifiers), input)
+  pointfreeBuilder(createModifiersBlock(modifiers), input)
 );
 
 export const fromClause = (resourceName, input = {}) =>
-  pointlessBuilder(createFromBlock(resourceName), input);
+  pointfreeBuilder(createFromBlock(resourceName), input);
 
 export const from = multiarity({
   1: partial(fromClause),
@@ -186,25 +186,25 @@ export const from = multiarity({
 });
 
 export const as = curry((resourceAlias, input) =>
-  pointlessBuilder(createAsBlock(resourceAlias), input)
+  pointfreeBuilder(createAsBlock(resourceAlias), input)
 );
 
 export const timeout = curry((timeoutValue, input) =>
-  pointlessBuilder(createTimeoutBlock(timeoutValue), input)
+  pointfreeBuilder(createTimeoutBlock(timeoutValue), input)
 );
 
 export const headers = curry((headers, input) =>
-  pointlessBuilder(createHeaderBlock(headers), input)
+  pointfreeBuilder(createHeaderBlock(headers), input)
 );
 
 export const withClause = curry((paramName, paramValue, input) =>
-  pointlessBuilder(createWithBlock(paramName, paramValue), input)
+  pointfreeBuilder(createWithBlock(paramName, paramValue), input)
 );
 
-export const only = curry((filters, input) => pointlessBuilder(createOnlyBlock(filters), input));
+export const only = curry((filters, input) => pointfreeBuilder(createOnlyBlock(filters), input));
 
 const hiddenClause = curry((shouldBeHidden, input) => {
-  return pointlessBuilder(createHiddenBlock(shouldBeHidden), input);
+  return pointfreeBuilder(createHiddenBlock(shouldBeHidden), input);
 });
 
 export const hidden = multiarity({
@@ -214,7 +214,7 @@ export const hidden = multiarity({
 });
 
 export const ignoreErrorsClause = curry((shouldIgnore, input) => {
-  return pointlessBuilder(createIgnoreErrorsBlock(shouldIgnore), input);
+  return pointfreeBuilder(createIgnoreErrorsBlock(shouldIgnore), input);
 });
 
 export const ignoreErrors = multiarity({

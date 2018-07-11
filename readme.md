@@ -10,7 +10,7 @@ A helper library to create dynamic _RestQL ad-hoc queries_ in Javascript.
 
 # Guide
 
-This package offers two styles for building queries: chainable and pointless. Therefore, all examples will use both.
+This package offers two styles for building queries: chainable and pointfree. Therefore, all examples will use both.
 
 **Importing the lib**
 
@@ -18,7 +18,7 @@ This package offers two styles for building queries: chainable and pointless. Th
 // Chainable utility
 import queryBuilder from 'restql-query-builder';
 
-// Pointless funtions
+// Pointfree funtions
 import { from, as, only, ... } from 'restql-query-builder';
 ```
 
@@ -34,7 +34,7 @@ const chainableHeroQuery = queryBuilder()
   .toString();
 
 // FROM heroes AS hero
-const pointlessHeroQuery = compose(
+const pointfreeHeroQuery = compose(
   toString,
   as('hero'),
   from('heroes')
@@ -53,7 +53,7 @@ const chainableHeroQuery = queryBuilder()
   .toString();
 
 // FROM heroes AS hero
-const pointlessHeroQuery = compose(
+const pointfreeHeroQuery = compose(
   toString,
   as('hero'),
   from('heroes')
@@ -61,20 +61,20 @@ const pointlessHeroQuery = compose(
 
 // FROM sidekicks AS sidekick
 const chainableSidekickQuery = queryBuilder()
-								 .from('sidekicks')
-								 .as('sidekick');
+                                 .from('sidekicks')
+                                 .as('sidekick');
 
 // FROM sidekicks AS sidekick
-const pointlessSidekickQuery = compose(toString,
-                                        as('sidekick'),
-										from('sidekicks'));
+const pointfreeSidekickQuery = compose(toString,
+                                       as('sidekick'),
+                                       from('sidekicks'));
 
 // FROM heroes 
 //    AS Hero
 // FROM sidekicks
 //	  AS sidekick
 const chainableFinalQuery = [chainableHeroQuery, chainableSidekickQuery].join('\n');
-const pointlessFinalQuery = [pointlessHeroQuery, pointlessSidekickQuery].join('\n');
+const pointfreeFinalQuery = [pointfreeHeroQuery, pointfreeSidekickQuery].join('\n');
 ```
 
 *Note: an utility function to join queries is planned to be added soon.*
@@ -90,11 +90,11 @@ const heroName = 'Link';
 const chainableHeroQuery = queryBuilder()
                             .from('heroes')
                             .as('hero')
-                            .with('name', heroName)
+                            .withClause('name', heroName)
                             .toString();
 
 // FROM heroes AS hero WITH name = "Link"
-const pointlessHeroQuery = compose(toString,
+const pointfreeHeroQuery = compose(toString,
                                    with('name', heroName),
                                    as('hero'),
                                    from('heroes'))();
@@ -110,7 +110,7 @@ const chainableSidekickQuery = queryBuilder()
 								 .with('heroId', 'hero.id');
 
 // FROM sidekicks AS sidekick WITH heroId = hero.id
-const pointlessSidekickQuery = compose(toString,
+const pointfreeSidekickQuery = compose(toString,
                                        	withClause('heroId', 'hero.id')
                                         as('sidekick'),
 										from('sidekicks'));
@@ -134,7 +134,7 @@ const chainableHeroQuery = queryBuilder()
                             .toString();
 
 // FROM heroes AS hero WITH name = "Link" ONLY name, stats
-const pointlessHeroQuery = compose(toString,
+const pointfreeHeroQuery = compose(toString,
                                    only(fieldsRequired),
                                    withClause('name', 'Link'),
                                    as('hero'),
@@ -154,7 +154,7 @@ const chainableHeroQuery = queryBuilder()
   .toString();
 
 // FROM heroes AS hero HIDDEN
-const pointlessHeroQuery = compose(
+const pointfreeHeroQuery = compose(
   toString,
   hidden(),
   as('hero'),
@@ -168,6 +168,10 @@ const pointlessHeroQuery = compose(
 
 ```javascript
 const headers = [['accept', 'application/json']];
+// OR
+const headerObj = {
+    accept: 'application/json'
+}
 
 // FROM heroes AS hero HEADERS accept = "application/json"
 const chainableheroQuery = queryBuilder()
@@ -177,7 +181,7 @@ const chainableheroQuery = queryBuilder()
                             .toString();
 
 // FROM heroes AS hero HEADERS accept = "application/json"
-const pointlessHeroQuery = compose(toString,
+const pointfreeHeroQuery = compose(toString,
                                    headers(headers),
                                    as('hero'),
                                    from('heroes'))();
@@ -196,7 +200,7 @@ const chainableheroQuery = queryBuilder()
                             .toString();
 
 // FROM heroes AS hero IGNORE-ERRORS
-const pointlessHeroQuery = compose(toString,
+const pointfreeHeroQuery = compose(toString,
                                    ignoreErrors(),
                                    as('hero'),
                                    from('heroes'))();
@@ -207,7 +211,7 @@ const pointlessHeroQuery = compose(toString,
 **Apply functions or enconders to Query arguments**
 
 ```javascript
-const fieldsRequired = ['name', 'stats'];
+const weapons = ['name', 'stats'];
 
 // FROM heroes AS hero 
 // 	  WITH weapons = ["sword", "shield"] -> flatten
@@ -215,22 +219,41 @@ const fieldsRequired = ['name', 'stats'];
 const chainableHeroQuery = queryBuilder()
                             .from('heroes')
                             .as('hero')
-                            .with('name', 'Link')
+                            .with('weapons', weapons)
 							.apply('flatten')
-                            .only(fieldsRequired)
+                            .only("name")
 							.apply('match("^Knight")')
                             .toString();
 
 // FROM heroes AS hero 
 // 	  WITH weapons = ["sword", "shield"] -> flatten
 //    ONLY name -> match("^Knight")
-const pointlessHeroQuery = compose(toString,
+const pointfreeHeroQuery = compose(toString,
                                    apply('match("^Knight")')
-                                   only(fieldsRequired),
+                                   only("name"),
                                    apply('flatten'),
-                                   withClause('name', 'Link'),
+                                   withClause('weapons', weapons),
                                    as('hero'),
                                    from('heroes'))();
+```
+
+
+
+**Query an Endpoint and set modifiers**
+
+```javascript
+// USE use=cache = 600 FROM heroes AS hero IGNORE-ERRORS
+const chainableheroQuery = queryBuilder()
+                            .use([['use-cache', 600]])
+                            .from('heroes')
+                            .as('hero')
+                            .toString();
+
+// USE use=cache = 600 FROM heroes AS hero IGNORE-ERRORS
+const pointfreeHeroQuery = compose(toString,
+                                   as('hero'),
+                                   from('heroes'),
+                                   use([['use-cache', 600]]))();
 ```
 
 

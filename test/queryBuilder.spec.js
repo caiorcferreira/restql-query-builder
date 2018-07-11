@@ -144,7 +144,7 @@ describe('Query Builder', () => {
     });
   });
 
-  describe('Pointless Style', () => {
+  describe('Pointfree Style', () => {
     it('should get the string of a complete query', () => {
       const query = compose(
         toString,

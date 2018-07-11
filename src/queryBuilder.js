@@ -167,14 +167,14 @@ export const queryBuilder = (input = {}) => {
   };
 };
 
-// Pointless style builders
-const pointlessBuilder = curry((builder, input) => {
+// Pointfree style builders
+const pointfreeBuilder = curry((builder, input) => {
   const inputBuilder = toBuilder(input);
   return chainQueryBuilders(inputBuilder, builder);
 });
 
 const useBuilder = (modifiers, input = {}) =>
-  pointlessBuilder(createModifiersBlock(modifiers), input);
+  pointfreeBuilder(createModifiersBlock(modifiers), input);
 
 export const use = multiarity({
   1: partial(useBuilder),
@@ -182,7 +182,7 @@ export const use = multiarity({
 });
 
 const fromBuilder = (resourceName, input = {}) =>
-  pointlessBuilder(createFromBlock(resourceName), input);
+  pointfreeBuilder(createFromBlock(resourceName), input);
 
 export const from = multiarity({
   1: partial(fromBuilder),
@@ -190,7 +190,7 @@ export const from = multiarity({
 });
 
 const asBuilder = (resourceAlias, input = {}) =>
-  pointlessBuilder(createAsBlock(resourceAlias), input);
+  pointfreeBuilder(createAsBlock(resourceAlias), input);
 
 export const as = multiarity({
   1: partial(asBuilder),
@@ -198,14 +198,14 @@ export const as = multiarity({
 });
 
 const timeoutBuilder = (timeoutValue, input = {}) =>
-  pointlessBuilder(createTimeoutBlock(timeoutValue), input);
+  pointfreeBuilder(createTimeoutBlock(timeoutValue), input);
 
 export const timeout = multiarity({
   1: partial(timeoutBuilder),
   n: apply(timeout)
 });
 
-const headersBuilder = (headers, input = {}) => pointlessBuilder(createHeaderBlock(headers), input);
+const headersBuilder = (headers, input = {}) => pointfreeBuilder(createHeaderBlock(headers), input);
 
 export const headers = multiarity({
   1: partial(headersBuilder),
@@ -213,7 +213,7 @@ export const headers = multiarity({
 });
 
 const withBuilder = (paramName, paramValue, input = {}) =>
-  pointlessBuilder(createWithBlock(paramName, paramValue), input);
+  pointfreeBuilder(createWithBlock(paramName, paramValue), input);
 
 export const withClause = multiarity({
   1: ([paramName]) => paramValue => (input = {}) => withBuilder(paramName, paramValue, input),
@@ -221,7 +221,7 @@ export const withClause = multiarity({
   n: apply(withBuilder)
 });
 
-const onlyBuilder = (filters, input = {}) => pointlessBuilder(createOnlyBlock(filters), input);
+const onlyBuilder = (filters, input = {}) => pointfreeBuilder(createOnlyBlock(filters), input);
 
 export const only = multiarity({
   1: partial(onlyBuilder),
@@ -229,7 +229,7 @@ export const only = multiarity({
 });
 
 const hiddenBuilder = (shouldBeHidden, input = {}) =>
-  pointlessBuilder(createHiddenBlock(shouldBeHidden), input);
+  pointfreeBuilder(createHiddenBlock(shouldBeHidden), input);
 
 export const hidden = multiarity({
   0: K(partial(hiddenBuilder, [true])),
@@ -238,7 +238,7 @@ export const hidden = multiarity({
 });
 
 const ignoreErrorsBuilder = (shouldIgnore, input = {}) =>
-  pointlessBuilder(createIgnoreErrorsBlock(shouldIgnore), input);
+  pointfreeBuilder(createIgnoreErrorsBlock(shouldIgnore), input);
 
 export const ignoreErrors = multiarity({
   0: K(partial(ignoreErrorsBuilder, [true])),

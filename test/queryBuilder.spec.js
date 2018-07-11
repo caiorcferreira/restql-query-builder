@@ -115,6 +115,33 @@ describe('Query Builder', () => {
         toString: expect.any(Function)
       });
     });
+
+    it('should create a query with any order', () => {
+      const chainableHeroQuery = queryBuilder()
+        .withClause('name', 'Link')
+        .from('heroes')
+        .as('hero');
+
+      const pointfreeHeroQuery = compose(
+        from('heroes'),
+        as('hero')
+      )();
+
+      expect(chainableHeroQuery.toString()).toBe('from heroes as hero\nwith name = "Link"');
+
+      expect(toString(pointfreeHeroQuery)).toBe('from heroes as hero');
+
+      const withName = withClause('name');
+      const withHeroName = withName('Link');
+
+      const query = compose(
+        from('heroes'),
+        withHeroName,
+        ignoreErrors()
+      )();
+
+      expect(toString(query)).toBe('from heroes\nwith name = "Link"\nignore-errors');
+    });
   });
 
   describe('Pointless Style', () => {
@@ -200,9 +227,10 @@ describe('Query Builder', () => {
     it('should get the object form of a query with hidden block', () => {
       const query = compose(
         toObject,
-        hidden(true),
+        hidden(),
         from('heroes')
       )();
+
       expect(query).toEqual({ from: 'heroes', hidden: true });
     });
 

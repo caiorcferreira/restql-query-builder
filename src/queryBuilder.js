@@ -173,54 +173,77 @@ const pointlessBuilder = curry((builder, input) => {
   return chainQueryBuilders(inputBuilder, builder);
 });
 
-export const use = curry((modifiers, input) =>
-  pointlessBuilder(createModifiersBlock(modifiers), input)
-);
+const useBuilder = (modifiers, input = {}) =>
+  pointlessBuilder(createModifiersBlock(modifiers), input);
 
-export const fromClause = (resourceName, input = {}) =>
+export const use = multiarity({
+  1: partial(useBuilder),
+  n: apply(asBuilder)
+});
+
+const fromBuilder = (resourceName, input = {}) =>
   pointlessBuilder(createFromBlock(resourceName), input);
 
 export const from = multiarity({
-  1: partial(fromClause),
-  n: apply(fromClause)
+  1: partial(fromBuilder),
+  n: apply(fromBuilder)
 });
 
-export const as = curry((resourceAlias, input) =>
-  pointlessBuilder(createAsBlock(resourceAlias), input)
-);
+const asBuilder = (resourceAlias, input = {}) =>
+  pointlessBuilder(createAsBlock(resourceAlias), input);
 
-export const timeout = curry((timeoutValue, input) =>
-  pointlessBuilder(createTimeoutBlock(timeoutValue), input)
-);
-
-export const headers = curry((headers, input) =>
-  pointlessBuilder(createHeaderBlock(headers), input)
-);
-
-export const withClause = curry((paramName, paramValue, input) =>
-  pointlessBuilder(createWithBlock(paramName, paramValue), input)
-);
-
-export const only = curry((filters, input) => pointlessBuilder(createOnlyBlock(filters), input));
-
-const hiddenClause = curry((shouldBeHidden, input) => {
-  return pointlessBuilder(createHiddenBlock(shouldBeHidden), input);
+export const as = multiarity({
+  1: partial(asBuilder),
+  n: apply(asBuilder)
 });
+
+const timeoutBuilder = (timeoutValue, input = {}) =>
+  pointlessBuilder(createTimeoutBlock(timeoutValue), input);
+
+export const timeout = multiarity({
+  1: partial(timeoutBuilder),
+  n: apply(timeout)
+});
+
+const headersBuilder = (headers, input = {}) => pointlessBuilder(createHeaderBlock(headers), input);
+
+export const headers = multiarity({
+  1: partial(headersBuilder),
+  n: apply(headersBuilder)
+});
+
+const withBuilder = (paramName, paramValue, input = {}) =>
+  pointlessBuilder(createWithBlock(paramName, paramValue), input);
+
+export const withClause = multiarity({
+  1: ([paramName]) => paramValue => (input = {}) => withBuilder(paramName, paramValue, input),
+  2: partial(withBuilder),
+  n: apply(withBuilder)
+});
+
+const onlyBuilder = (filters, input = {}) => pointlessBuilder(createOnlyBlock(filters), input);
+
+export const only = multiarity({
+  1: partial(onlyBuilder),
+  n: apply(onlyBuilder)
+});
+
+const hiddenBuilder = (shouldBeHidden, input = {}) =>
+  pointlessBuilder(createHiddenBlock(shouldBeHidden), input);
 
 export const hidden = multiarity({
-  0: K(hiddenClause(true)),
-  1: partial(hiddenClause),
-  n: apply(hiddenClause)
+  0: K(partial(hiddenBuilder, [true])),
+  1: partial(hiddenBuilder),
+  n: apply(hiddenBuilder)
 });
 
-export const ignoreErrorsClause = curry((shouldIgnore, input) => {
-  return pointlessBuilder(createIgnoreErrorsBlock(shouldIgnore), input);
-});
+const ignoreErrorsBuilder = (shouldIgnore, input = {}) =>
+  pointlessBuilder(createIgnoreErrorsBlock(shouldIgnore), input);
 
 export const ignoreErrors = multiarity({
-  0: K(ignoreErrorsClause(true)),
-  1: partial(ignoreErrorsClause),
-  n: apply(ignoreErrorsClause)
+  0: K(partial(ignoreErrorsBuilder, [true])),
+  1: partial(ignoreErrorsBuilder),
+  n: apply(ignoreErrorsBuilder)
 });
 
 export const toObject = runBuilder;

@@ -12,9 +12,11 @@ export const createTimeoutBlock = function(timeoutValue) {
   return K(assoc('timeout', timeoutValue, {}));
 };
 
-export const createHeaderBlock = function(headers) {
-  const headerObj = fromPairs(headers);
-  return K(assoc('headers', headerObj, {}));
+const toHeaders = cond([[is(Array), fromPairs], [K(true), I]]);
+
+export const createHeaderBlock = function(headersMap) {
+  const header = toHeaders(headersMap);
+  return K(assoc('headers', header, {}));
 };
 
 export const createWithBlock = curry(function(paramName, paramValue) {

@@ -42,6 +42,21 @@ describe('Block creators', () => {
     });
   });
 
+  it('should create header block with object', () => {
+    const headers = {
+      Accept: 'application/json',
+      Authorization: 'Basic user:pass'
+    };
+
+    // [['Accept', 'application/json'], ['Authorization', 'Basic user:pass']];
+
+    const headerBlock = createHeaderBlock(headers);
+
+    expect(headerBlock()).toEqual({
+      headers: { Accept: 'application/json', Authorization: 'Basic user:pass' }
+    });
+  });
+
   it('should create with block', () => {
     const paramName = 'name';
     const paramValue = 'Link';

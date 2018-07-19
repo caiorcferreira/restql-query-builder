@@ -13,6 +13,7 @@ import {
   headers,
   withClause,
   only,
+  apply,
   hidden,
   ignoreErrors,
   toString,
@@ -213,6 +214,21 @@ describe('Query Builder', () => {
         from('heroes')
       )();
       expect(query).toEqual({ from: 'heroes', with: { name: 'Link' } });
+    });
+
+    it('should get the object form of a query with apply operator', () => {
+      const query = compose(
+        toObject,
+        apply('flatten'),
+        withClause('weapons', ['sword', 'shield']),
+        from('heroes')
+      )();
+
+      expect(query).toEqual({
+        from: 'heroes',
+        with: { weapons: ['sword', 'shield'] },
+        apply: { with: { weapons: 'flatten' } }
+      });
     });
 
     it('should get the object form of a query with only block', () => {

@@ -10,7 +10,8 @@ import {
   flatten,
   concat,
   reduce,
-  apply,
+  apply as applyFn,
+  flip,
   always as K,
   merge,
   mergeWithKey
@@ -178,7 +179,7 @@ const useBuilder = (modifiers, input = {}) =>
 
 export const use = multiarity({
   1: partial(useBuilder),
-  n: apply(asBuilder)
+  n: applyFn(asBuilder)
 });
 
 const fromBuilder = (resourceName, input = {}) =>
@@ -186,7 +187,7 @@ const fromBuilder = (resourceName, input = {}) =>
 
 export const from = multiarity({
   1: partial(fromBuilder),
-  n: apply(fromBuilder)
+  n: applyFn(fromBuilder)
 });
 
 const asBuilder = (resourceAlias, input = {}) =>
@@ -194,7 +195,7 @@ const asBuilder = (resourceAlias, input = {}) =>
 
 export const as = multiarity({
   1: partial(asBuilder),
-  n: apply(asBuilder)
+  n: applyFn(asBuilder)
 });
 
 const timeoutBuilder = (timeoutValue, input = {}) =>
@@ -202,14 +203,14 @@ const timeoutBuilder = (timeoutValue, input = {}) =>
 
 export const timeout = multiarity({
   1: partial(timeoutBuilder),
-  n: apply(timeout)
+  n: applyFn(timeout)
 });
 
 const headersBuilder = (headers, input = {}) => pointfreeBuilder(createHeaderBlock(headers), input);
 
 export const headers = multiarity({
   1: partial(headersBuilder),
-  n: apply(headersBuilder)
+  n: applyFn(headersBuilder)
 });
 
 const withBuilder = (paramName, paramValue, input = {}) =>
@@ -218,15 +219,24 @@ const withBuilder = (paramName, paramValue, input = {}) =>
 export const withClause = multiarity({
   1: ([paramName]) => paramValue => (input = {}) => withBuilder(paramName, paramValue, input),
   2: partial(withBuilder),
-  n: apply(withBuilder)
+  n: applyFn(withBuilder)
 });
 
 const onlyBuilder = (filters, input = {}) => pointfreeBuilder(createOnlyBlock(filters), input);
 
 export const only = multiarity({
   1: partial(onlyBuilder),
-  n: apply(onlyBuilder)
+  n: applyFn(onlyBuilder)
 });
+
+export const apply = flip(
+  applyOperator(
+    compose(
+      flatten,
+      Array.of
+    )
+  )
+);
 
 const hiddenBuilder = (shouldBeHidden, input = {}) =>
   pointfreeBuilder(createHiddenBlock(shouldBeHidden), input);
@@ -234,7 +244,7 @@ const hiddenBuilder = (shouldBeHidden, input = {}) =>
 export const hidden = multiarity({
   0: K(partial(hiddenBuilder, [true])),
   1: partial(hiddenBuilder),
-  n: apply(hiddenBuilder)
+  n: applyFn(hiddenBuilder)
 });
 
 const ignoreErrorsBuilder = (shouldIgnore, input = {}) =>
@@ -243,7 +253,7 @@ const ignoreErrorsBuilder = (shouldIgnore, input = {}) =>
 export const ignoreErrors = multiarity({
   0: K(partial(ignoreErrorsBuilder, [true])),
   1: partial(ignoreErrorsBuilder),
-  n: apply(ignoreErrorsBuilder)
+  n: applyFn(ignoreErrorsBuilder)
 });
 
 export const toObject = runBuilder;

@@ -20,6 +20,8 @@ import queryBuilder from 'restql-query-builder';
 import { from, as, only, ... } from 'restql-query-builder';
 ```
 
+
+
 # Motivation
 
 restQL is a powerful and early adopted technology that brings a maintanable and robust solution for microservices orchestration. However, it has some limitations in terms of how one can create a query, such as lack of conditionals, dynamic response's fields filtering and optional parameters.
@@ -28,7 +30,9 @@ In order to address these and others constrains and to focus on the developer ex
 
 To achieve these goals it  leverages the Ad-Hoc Query feature, which allow the execution of external queries send to the restQL server, and a functional design, that enables declarative and adaptable implementation of the interfaces.
 
-# Recipies
+
+
+# Recipes
 
 This package offers two styles for building queries: chainable and pointfree. Therefore, all examples will use both.
 
@@ -263,6 +267,68 @@ const pointfreeHeroQuery = compose(toString,
                                    from('heroes'),
                                    use([['use-cache', 600]]))();
 ```
+
+
+
+# API Reference
+
+Although the **restQL Query Builder** exposes two interfaces they share a common schema, depicted below:
+
+### from
+
+**Arguments**
+
+1. resource (*String*): the registered endpoint name that the query will target. *Note that the resource must be mapped on the restQL server that will run the query*.
+
+### as
+
+**Arguments**
+
+1. alias (*String*): the name that you would like to reference the request defined by the query.
+
+### withClause
+
+*Disclaimer: this function should be callend `with`, but as it is a reserved keyword on Javascript other name was choosen.*
+**Arguments**
+
+1. paramaterName (*String*): the query parameter key expected by your microservice or the placeholder name defined on the mapping between the microservice's URL and the resource name.
+2. paramterValue (*any*): the value that will be send to the microservice. Could be a string, number, array, map/object or restQL reference type.
+
+### only
+
+**Arguments**
+
+1. fields (*Array<String>*): the response's field that you'd like to receive.
+
+### headers
+
+**Arguments**
+
+1. headers (*Object* | *Array<Pair<String, any>>*): the collection of headers to be send.
+
+### hidden
+
+**Arguments**
+
+1. shouldBeHidden (*[Boolean]*): optional, flag to indicate wheter the `hidden` clasue should be present on the query.
+
+### ignoreErrors
+
+**Arguments**
+
+1. shouldIgnoreErrors (*[Boolean]*): optional, flag to indicate wheter the `ignore-errors` clasue should be present on the query.
+
+### timeout
+
+**Arguments**
+
+1. timeoutValue (*Integer*): time to be set on query in order to wait for the microservice response.
+
+### use
+
+**Arguments**
+
+1. modifiers (*Array<Pair<String, any>>*): commonly used to set cache control.
 
 
 

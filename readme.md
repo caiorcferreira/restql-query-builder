@@ -1,16 +1,14 @@
-# RestQL Ad-Hoc Query Builder
+# restQL Query Builder
 
-A helper library to create dynamic _RestQL ad-hoc queries_ in Javascript.
+A helper library to create dynamic _restQL ad-hoc queries_ in Javascript.
 
-# Instalation
+# Usage
+
+**Instalation**
 
 `yarn add restql-builder`
 
 `npm install --save restql-builder`
-
-# Guide
-
-This package offers two styles for building queries: chainable and pointfree. Therefore, all examples will use both.
 
 **Importing the lib**
 
@@ -22,7 +20,17 @@ import queryBuilder from 'restql-query-builder';
 import { from, as, only, ... } from 'restql-query-builder';
 ```
 
+# Motivation
 
+restQL is a powerful and early adopted technology that brings a maintanable and robust solution for microservices orchestration. However, it has some limitations in terms of how one can create a query, such as lack of conditionals, dynamic response's fields filtering and optional parameters.
+
+In order to address these and others constrains and to focus on the developer experience the **restQL Query Builder** attemps to bring the flexibility of a full fledged language such as Javascript and a multi-paradigm approach exposing two interfaces, a fluent builder and a pointfree.
+
+To achieve these goals it  leverages the Ad-Hoc Query feature, which allow the execution of external queries send to the restQL server, and a functional design, that enables declarative and adaptable implementation of the interfaces.
+
+# Recipies
+
+This package offers two styles for building queries: chainable and pointfree. Therefore, all examples will use both.
 
 **Simple Query for an Endpoint**
 

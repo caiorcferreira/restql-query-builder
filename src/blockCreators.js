@@ -29,11 +29,11 @@ export const createOnlyBlock = function(filters) {
   return K(assoc('only', toArray(filters), {}));
 };
 
-export const createHiddenBlock = function(shouldBeHidden) {
+export const createHiddenBlock = function(shouldBeHidden = true) {
   return K(assoc('hidden', shouldBeHidden, {}));
 };
 
-export const createIgnoreErrorsBlock = function(shouldIgnoreErrors) {
+export const createIgnoreErrorsBlock = function(shouldIgnoreErrors = true) {
   return K(assoc('ignoreErrors', shouldIgnoreErrors, {}));
 };
 

@@ -110,6 +110,7 @@ export const queryBuilder = (input = {}) => {
 
   return {
     use: compose(
+      queryBuilder,
       chainWithInput,
       createModifiersBlock
     ),

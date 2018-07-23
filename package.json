@@ -4,6 +4,7 @@
   "description": "A builder for ad-hoc RestQL query requests.",
   "main": "./dist/queryBuilder.js",
   "scripts": {
+    "preversion": "npm run test",
     "start": "npm run dev",
     "dev": "npm test",
     "init": "mkdir dist",

@@ -6,9 +6,9 @@ A helper library to create dynamic _restQL ad-hoc queries_ in Javascript.
 
 **Instalation**
 
-`yarn add restql-builder`
+`yarn add restql-query-builder`
 
-`npm install --save restql-builder`
+`npm install --save restql-query-builder`
 
 **Importing the lib**
 

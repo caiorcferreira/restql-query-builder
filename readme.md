@@ -62,31 +62,29 @@ const pointfreeHeroQuery = compose(
 const chainableHeroQuery = queryBuilder()
   .from('heroes')
   .as('hero')
-  .toString();
-
-// FROM heroes AS hero
-const pointfreeHeroQuery = compose(
-  toString,
-  as('hero'),
-  from('heroes')
-)();
 
 // FROM sidekicks AS sidekick
 const chainableSidekickQuery = queryBuilder()
                                  .from('sidekicks')
                                  .as('sidekick');
 
+// FROM heroes 
+//    AS Hero
+// FROM sidekicks
+//	  AS sidekick
+const chainableFinalQuery = toString([chainableHeroQuery, chainableSidekickQuery]);
+
+// FROM heroes AS hero
+const pointfreeHeroQuery = compose(as('hero'), from('heroes'))();
+
 // FROM sidekicks AS sidekick
-const pointfreeSidekickQuery = compose(toString,
-                                       as('sidekick'),
-                                       from('sidekicks'));
+const pointfreeSidekickQuery = compose(as('sidekick'), from('sidekicks'));
 
 // FROM heroes 
 //    AS Hero
 // FROM sidekicks
 //	  AS sidekick
-const chainableFinalQuery = [chainableHeroQuery, chainableSidekickQuery].join('\n');
-const pointfreeFinalQuery = [pointfreeHeroQuery, pointfreeSidekickQuery].join('\n');
+const pointfreeFinalQuery = toString([pointfreeHeroQuery, pointfreeSidekickQuery]);
 ```
 
 *Note: an utility function to join queries is planned to be added soon.*

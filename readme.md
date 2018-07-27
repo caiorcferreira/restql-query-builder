@@ -41,9 +41,9 @@ This package offers two styles for building queries: chainable and pointfree. Th
 ```javascript
 // FROM heroes AS hero
 const chainableHeroQuery = queryBuilder()
-  .from('heroes')
-  .as('hero')
-  .toString();
+			    .from('heroes')
+			    .as('hero')
+			    .toString();
 
 // FROM heroes AS hero
 const pointfreeHeroQuery = compose(
@@ -60,13 +60,13 @@ const pointfreeHeroQuery = compose(
 ```javascript
 // FROM heroes AS hero
 const chainableHeroQuery = queryBuilder()
-  .from('heroes')
-  .as('hero')
+			    .from('heroes')
+			    .as('hero')
 
 // FROM sidekicks AS sidekick
 const chainableSidekickQuery = queryBuilder()
-                                 .from('sidekicks')
-                                 .as('sidekick');
+			        .from('sidekicks')
+                                .as('sidekick');
 
 // FROM heroes 
 //    AS Hero
@@ -75,10 +75,16 @@ const chainableSidekickQuery = queryBuilder()
 const chainableFinalQuery = toString([chainableHeroQuery, chainableSidekickQuery]);
 
 // FROM heroes AS hero
-const pointfreeHeroQuery = compose(as('hero'), from('heroes'))();
+const pointfreeHeroQuery = compose(
+  as('hero'),
+  from('heroes')
+);
 
 // FROM sidekicks AS sidekick
-const pointfreeSidekickQuery = compose(as('sidekick'), from('sidekicks'));
+const pointfreeSidekickQuery = compose(
+  as('sidekick'),
+  from('sidekicks')
+);
 
 // FROM heroes 
 //    AS Hero
@@ -104,10 +110,12 @@ const chainableHeroQuery = queryBuilder()
                             .toString();
 
 // FROM heroes AS hero WITH name = "Link"
-const pointfreeHeroQuery = compose(toString,
-                                   with('name', heroName),
-                                   as('hero'),
-                                   from('heroes'))();
+const pointfreeHeroQuery = compose(
+  toString,
+  with('name', heroName),
+  as('hero'),
+  from('heroes')
+)();
 ```
 
 This function supports all RestQL data types, including reference types, as showed below:
@@ -115,15 +123,17 @@ This function supports all RestQL data types, including reference types, as show
 ```javascript
 // FROM sidekicks AS sidekick WITH heroId = hero.id
 const chainableSidekickQuery = queryBuilder()
-								 .from('sidekicks')
-								 .as('sidekick')
-								 .with('heroId', 'hero.id');
+				.from('sidekicks')
+				.as('sidekick')
+				.with('heroId', 'hero.id');
 
 // FROM sidekicks AS sidekick WITH heroId = hero.id
-const pointfreeSidekickQuery = compose(toString,
-                                       	withClause('heroId', 'hero.id')
-                                        as('sidekick'),
-										from('sidekicks'));
+const pointfreeSidekickQuery = compose(
+  toString,
+  withClause('heroId', 'hero.id')
+  as('sidekick'),
+  from('sidekicks')
+);
 ```
 
 So the queries will be run in sequence and and the `id` field from the result of the hero query will be used in the sidekick query.
@@ -144,11 +154,13 @@ const chainableHeroQuery = queryBuilder()
                             .toString();
 
 // FROM heroes AS hero WITH name = "Link" ONLY name, stats
-const pointfreeHeroQuery = compose(toString,
-                                   only(fieldsRequired),
-                                   withClause('name', 'Link'),
-                                   as('hero'),
-                                   from('heroes'))();
+const pointfreeHeroQuery = compose(
+  toString,
+  only(fieldsRequired),
+  withClause('name', 'Link'),
+  as('hero'),
+  from('heroes')
+)();
 ```
 
 
@@ -158,10 +170,10 @@ const pointfreeHeroQuery = compose(toString,
 ```javascript
 // FROM heroes AS hero HIDDEN
 const chainableHeroQuery = queryBuilder()
-  .from('heroes')
-  .as('hero')
-  .hidden()
-  .toString();
+			    .from('heroes')
+			    .as('hero')
+			    .hidden()
+			    .toString();
 
 // FROM heroes AS hero HIDDEN
 const pointfreeHeroQuery = compose(
@@ -191,10 +203,12 @@ const chainableheroQuery = queryBuilder()
                             .toString();
 
 // FROM heroes AS hero HEADERS accept = "application/json"
-const pointfreeHeroQuery = compose(toString,
-                                   headers(headers),
-                                   as('hero'),
-                                   from('heroes'))();
+const pointfreeHeroQuery = compose(
+  toString,
+  headers(headers),
+  as('hero'),
+  from('heroes')
+)();
 ```
 
 
@@ -210,10 +224,12 @@ const chainableheroQuery = queryBuilder()
                             .toString();
 
 // FROM heroes AS hero IGNORE-ERRORS
-const pointfreeHeroQuery = compose(toString,
-                                   ignoreErrors(),
-                                   as('hero'),
-                                   from('heroes'))();
+const pointfreeHeroQuery = compose(
+  toString,
+  ignoreErrors(),
+  as('hero'),
+  from('heroes')
+)();
 ```
 
 
@@ -238,13 +254,15 @@ const chainableHeroQuery = queryBuilder()
 // FROM heroes AS hero 
 // 	  WITH weapons = ["sword", "shield"] -> flatten
 //    ONLY name -> match("^Knight")
-const pointfreeHeroQuery = compose(toString,
-                                   apply('match("^Knight")')
-                                   only("name"),
-                                   apply('flatten'),
-                                   withClause('weapons', weapons),
-                                   as('hero'),
-                                   from('heroes'))();
+const pointfreeHeroQuery = compose(
+  toString,
+  apply('match("^Knight")')
+  only("name"),
+  apply('flatten'),
+  withClause('weapons', weapons),
+  as('hero'),
+  from('heroes')
+)();
 ```
 
 
@@ -260,10 +278,12 @@ const chainableheroQuery = queryBuilder()
                             .toString();
 
 // USE use=cache = 600 FROM heroes AS hero IGNORE-ERRORS
-const pointfreeHeroQuery = compose(toString,
-                                   as('hero'),
-                                   from('heroes'),
-                                   use([['use-cache', 600]]))();
+const pointfreeHeroQuery = compose(
+  toString,
+  as('hero'),
+  from('heroes'),
+  use([['use-cache', 600]])
+)();
 ```
 
 

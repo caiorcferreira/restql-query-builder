@@ -230,9 +230,9 @@ const chainableHeroQuery = queryBuilder()
                             .from('heroes')
                             .as('hero')
                             .with('weapons', weapons)
-							.apply('flatten')
+			    .apply('flatten')
                             .only("name")
-							.apply('match("^Knight")')
+			    .apply('match("^Knight")')
                             .toString();
 
 // FROM heroes AS hero 
@@ -272,19 +272,19 @@ const pointfreeHeroQuery = compose(toString,
 
 Although the **restQL Query Builder** exposes two interfaces they share a common schema, depicted below:
 
-### from
+### `from`
 
 **Arguments**
 
 1. resource (*String*): the registered endpoint name that the query will target. *Note that the resource must be mapped on the restQL server that will run the query*.
 
-### as
+### `as`
 
 **Arguments**
 
 1. alias (*String*): the name that you would like to reference the request defined by the query.
 
-### withClause
+### `withClause`
 
 *Disclaimer: this function should be callend `with`, but as it is a reserved keyword on Javascript other name was choosen.*
 **Arguments**
@@ -292,37 +292,37 @@ Although the **restQL Query Builder** exposes two interfaces they share a common
 1. paramaterName (*String*): the query parameter key expected by your microservice or the placeholder name defined on the mapping between the microservice's URL and the resource name.
 2. paramterValue (*any*): the value that will be send to the microservice. Could be a string, number, array, map/object or restQL reference type.
 
-### only
+### `only`
 
 **Arguments**
 
 1. fields (*Array<String>*): the response's field that you'd like to receive.
 
-### headers
+### `headers`
 
 **Arguments**
 
 1. headers (*Object* | *Array<Pair<String, any>>*): the collection of headers to be send.
 
-### hidden
+### `hidden`
 
 **Arguments**
 
 1. shouldBeHidden (*[Boolean]*): optional, flag to indicate wheter the `hidden` clasue should be present on the query.
 
-### ignoreErrors
+### `ignoreErrors`
 
 **Arguments**
 
 1. shouldIgnoreErrors (*[Boolean]*): optional, flag to indicate wheter the `ignore-errors` clasue should be present on the query.
 
-### timeout
+### `timeout`
 
 **Arguments**
 
 1. timeoutValue (*Integer*): time to be set on query in order to wait for the microservice response.
 
-### use
+### `use`
 
 **Arguments**
 

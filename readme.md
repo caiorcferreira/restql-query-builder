@@ -41,9 +41,9 @@ This package offers two styles for building queries: chainable and pointfree. Th
 ```javascript
 // FROM heroes AS hero
 const chainableHeroQuery = queryBuilder()
-  .from('heroes')
-  .as('hero')
-  .toString();
+			    .from('heroes')
+			    .as('hero')
+			    .toString();
 
 // FROM heroes AS hero
 const pointfreeHeroQuery = compose(
@@ -60,13 +60,13 @@ const pointfreeHeroQuery = compose(
 ```javascript
 // FROM heroes AS hero
 const chainableHeroQuery = queryBuilder()
-  .from('heroes')
-  .as('hero')
+			    .from('heroes')
+			    .as('hero')
 
 // FROM sidekicks AS sidekick
 const chainableSidekickQuery = queryBuilder()
-                                 .from('sidekicks')
-                                 .as('sidekick');
+			        .from('sidekicks')
+                                .as('sidekick');
 
 // FROM heroes 
 //    AS Hero
@@ -75,10 +75,16 @@ const chainableSidekickQuery = queryBuilder()
 const chainableFinalQuery = toString([chainableHeroQuery, chainableSidekickQuery]);
 
 // FROM heroes AS hero
-const pointfreeHeroQuery = compose(as('hero'), from('heroes'))();
+const pointfreeHeroQuery = compose(
+  as('hero'),
+  from('heroes')
+);
 
 // FROM sidekicks AS sidekick
-const pointfreeSidekickQuery = compose(as('sidekick'), from('sidekicks'));
+const pointfreeSidekickQuery = compose(
+  as('sidekick'),
+  from('sidekicks')
+);
 
 // FROM heroes 
 //    AS Hero
@@ -104,10 +110,12 @@ const chainableHeroQuery = queryBuilder()
                             .toString();
 
 // FROM heroes AS hero WITH name = "Link"
-const pointfreeHeroQuery = compose(toString,
-                                   with('name', heroName),
-                                   as('hero'),
-                                   from('heroes'))();
+const pointfreeHeroQuery = compose(
+  toString,
+  with('name', heroName),
+  as('hero'),
+  from('heroes')
+)();
 ```
 
 This function supports all RestQL data types, including reference types, as showed below:
@@ -115,15 +123,17 @@ This function supports all RestQL data types, including reference types, as show
 ```javascript
 // FROM sidekicks AS sidekick WITH heroId = hero.id
 const chainableSidekickQuery = queryBuilder()
-								 .from('sidekicks')
-								 .as('sidekick')
-								 .with('heroId', 'hero.id');
+				.from('sidekicks')
+				.as('sidekick')
+				.with('heroId', 'hero.id');
 
 // FROM sidekicks AS sidekick WITH heroId = hero.id
-const pointfreeSidekickQuery = compose(toString,
-                                       	withClause('heroId', 'hero.id')
-                                        as('sidekick'),
-										from('sidekicks'));
+const pointfreeSidekickQuery = compose(
+  toString,
+  withClause('heroId', 'hero.id')
+  as('sidekick'),
+  from('sidekicks')
+);
 ```
 
 So the queries will be run in sequence and and the `id` field from the result of the hero query will be used in the sidekick query.
@@ -144,11 +154,13 @@ const chainableHeroQuery = queryBuilder()
                             .toString();
 
 // FROM heroes AS hero WITH name = "Link" ONLY name, stats
-const pointfreeHeroQuery = compose(toString,
-                                   only(fieldsRequired),
-                                   withClause('name', 'Link'),
-                                   as('hero'),
-                                   from('heroes'))();
+const pointfreeHeroQuery = compose(
+  toString,
+  only(fieldsRequired),
+  withClause('name', 'Link'),
+  as('hero'),
+  from('heroes')
+)();
 ```
 
 
@@ -158,10 +170,10 @@ const pointfreeHeroQuery = compose(toString,
 ```javascript
 // FROM heroes AS hero HIDDEN
 const chainableHeroQuery = queryBuilder()
-  .from('heroes')
-  .as('hero')
-  .hidden()
-  .toString();
+			    .from('heroes')
+			    .as('hero')
+			    .hidden()
+			    .toString();
 
 // FROM heroes AS hero HIDDEN
 const pointfreeHeroQuery = compose(
@@ -191,10 +203,12 @@ const chainableheroQuery = queryBuilder()
                             .toString();
 
 // FROM heroes AS hero HEADERS accept = "application/json"
-const pointfreeHeroQuery = compose(toString,
-                                   headers(headers),
-                                   as('hero'),
-                                   from('heroes'))();
+const pointfreeHeroQuery = compose(
+  toString,
+  headers(headers),
+  as('hero'),
+  from('heroes')
+)();
 ```
 
 
@@ -210,10 +224,12 @@ const chainableheroQuery = queryBuilder()
                             .toString();
 
 // FROM heroes AS hero IGNORE-ERRORS
-const pointfreeHeroQuery = compose(toString,
-                                   ignoreErrors(),
-                                   as('hero'),
-                                   from('heroes'))();
+const pointfreeHeroQuery = compose(
+  toString,
+  ignoreErrors(),
+  as('hero'),
+  from('heroes')
+)();
 ```
 
 
@@ -230,21 +246,23 @@ const chainableHeroQuery = queryBuilder()
                             .from('heroes')
                             .as('hero')
                             .with('weapons', weapons)
-							.apply('flatten')
+			    .apply('flatten')
                             .only("name")
-							.apply('match("^Knight")')
+			    .apply('match("^Knight")')
                             .toString();
 
 // FROM heroes AS hero 
 // 	  WITH weapons = ["sword", "shield"] -> flatten
 //    ONLY name -> match("^Knight")
-const pointfreeHeroQuery = compose(toString,
-                                   apply('match("^Knight")')
-                                   only("name"),
-                                   apply('flatten'),
-                                   withClause('weapons', weapons),
-                                   as('hero'),
-                                   from('heroes'))();
+const pointfreeHeroQuery = compose(
+  toString,
+  apply('match("^Knight")')
+  only("name"),
+  apply('flatten'),
+  withClause('weapons', weapons),
+  as('hero'),
+  from('heroes')
+)();
 ```
 
 
@@ -260,10 +278,12 @@ const chainableheroQuery = queryBuilder()
                             .toString();
 
 // USE use=cache = 600 FROM heroes AS hero IGNORE-ERRORS
-const pointfreeHeroQuery = compose(toString,
-                                   as('hero'),
-                                   from('heroes'),
-                                   use([['use-cache', 600]]))();
+const pointfreeHeroQuery = compose(
+  toString,
+  as('hero'),
+  from('heroes'),
+  use([['use-cache', 600]])
+)();
 ```
 
 
@@ -272,19 +292,19 @@ const pointfreeHeroQuery = compose(toString,
 
 Although the **restQL Query Builder** exposes two interfaces they share a common schema, depicted below:
 
-### from
+### `from`
 
 **Arguments**
 
 1. resource (*String*): the registered endpoint name that the query will target. *Note that the resource must be mapped on the restQL server that will run the query*.
 
-### as
+### `as`
 
 **Arguments**
 
 1. alias (*String*): the name that you would like to reference the request defined by the query.
 
-### withClause
+### `withClause`
 
 *Disclaimer: this function should be callend `with`, but as it is a reserved keyword on Javascript other name was choosen.*
 **Arguments**
@@ -292,37 +312,37 @@ Although the **restQL Query Builder** exposes two interfaces they share a common
 1. paramaterName (*String*): the query parameter key expected by your microservice or the placeholder name defined on the mapping between the microservice's URL and the resource name.
 2. paramterValue (*any*): the value that will be send to the microservice. Could be a string, number, array, map/object or restQL reference type.
 
-### only
+### `only`
 
 **Arguments**
 
 1. fields (*Array<String>*): the response's field that you'd like to receive.
 
-### headers
+### `headers`
 
 **Arguments**
 
 1. headers (*Object* | *Array<Pair<String, any>>*): the collection of headers to be send.
 
-### hidden
+### `hidden`
 
 **Arguments**
 
 1. shouldBeHidden (*[Boolean]*): optional, flag to indicate wheter the `hidden` clasue should be present on the query.
 
-### ignoreErrors
+### `ignoreErrors`
 
 **Arguments**
 
 1. shouldIgnoreErrors (*[Boolean]*): optional, flag to indicate wheter the `ignore-errors` clasue should be present on the query.
 
-### timeout
+### `timeout`
 
 **Arguments**
 
 1. timeoutValue (*Integer*): time to be set on query in order to wait for the microservice response.
 
-### use
+### `use`
 
 **Arguments**
 
